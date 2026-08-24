@@ -19,25 +19,13 @@ import { prisma } from "../../infrastructure/database/prisma.js";
 export async function handleTicketMessage(
   message: Message
 ): Promise<void> {
-  // ========================================================
-  // IGNORA BOTS
-  // ========================================================
-
   if (message.author.bot) {
     return;
   }
 
-  // ========================================================
-  // IGNORA MENSAGENS FORA DE SERVIDOR
-  // ========================================================
-
   if (!message.guild) {
     return;
   }
-
-  // ========================================================
-  // BUSCA TICKET
-  // ========================================================
 
   const ticket =
     await prisma.ticket.findFirst({
@@ -58,17 +46,9 @@ export async function handleTicketMessage(
       },
     });
 
-  // ========================================================
-  // NÃO É UM TICKET
-  // ========================================================
-
   if (!ticket) {
     return;
   }
-
-  // ========================================================
-  // APENAS O SOLICITANTE PASSA POR ESTE CONTROLE
-  // ========================================================
 
   if (
     message.author.id !==
@@ -77,86 +57,88 @@ export async function handleTicketMessage(
     return;
   }
 
-  // ========================================================
-  // VERIFICA ANEXOS
-  // ========================================================
-
-  // ========================================================
-// VERIFICA ANEXOS
-// ========================================================
-
-const existingProofCount =
+  const existingProofCount =
     await prisma.ticketProof.count({
-        where: {
-            ticketId: ticket.id,
-        },
+      where: {
+        ticketId: ticket.id,
+      },
     });
 
-if (
+  if (
     message.attachments.size === 0 &&
-    existingProofCount === 0) {
-  try {
-    await message.delete();
+    existingProofCount === 0
+  ) {
+    try {
+      await message.delete();
 
-    console.log(
-      "🗑️ [TICKET] Mensagem sem prova removida:",
-      {
-        ticketId: ticket.id,
-        messageId: message.id,
-        userId: message.author.id,
+      console.log(
+        "🗑️ [TICKET] Mensagem sem prova removida:",
+        {
+          ticketId: ticket.id,
+          messageId: message.id,
+          userId: message.author.id,
+        }
+      );
+
+      if (
+        !message.channel.isTextBased() ||
+        !("send" in message.channel)
+      ) {
+        return;
       }
-    );
 
-    // ======================================================
-    // VERIFICA SE O CANAL PERMITE ENVIO
-    // ======================================================
+      const warningContainer =
+        new ContainerBuilder()
+          .setAccentColor(0xfee75c)
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              [
+                `# ⚠️ <@${message.author.id}> Mensagem removida`,
+                "",
+                "Este ticket aceita apenas mensagens acompanhadas de anexos como prova.",
+              ].join("\n")
+            )
+          )
+          .addSeparatorComponents(
+            new SeparatorBuilder()
+              .setSpacing(SeparatorSpacingSize.Small)
+          )
+          .addTextDisplayComponents(
+            new TextDisplayBuilder().setContent(
+              [
+                "## 📎 O que enviar",
+                "",
+                "📸 Imagens",
+                "🎥 Vídeos",
+                "📄 Documentos",
+                "",
+                "-# Envie o arquivo diretamente neste canal para que ele seja registrado como prova.",
+              ].join("\n")
+            )
+          );
 
-    if (
-      !message.channel.isTextBased() ||
-      !("send" in message.channel)
-    ) {
-      return;
+      const warningMessage =
+        await message.channel.send({
+          components: [warningContainer],
+          flags: MessageFlags.IsComponentsV2,
+        });
+
+      setTimeout(async () => {
+        try {
+          await warningMessage.delete();
+        } catch {
+          // A mensagem pode já ter sido removida.
+        }
+      }, 8000);
+    } catch (error) {
+      console.error(
+        "❌ [TICKET] Não foi possível processar mensagem sem prova:",
+        error
+      );
     }
 
-    // ======================================================
-    // AVISO AO USUÁRIO
-    // ======================================================
-
-    const warningMessage =
-      await message.channel.send({
-        content: [
-          `⚠️ <@${message.author.id}>`,
-          "",
-          "Sua mensagem foi removida porque este ticket aceita **apenas mensagens acompanhadas de anexos como prova**.",
-          "",
-          "📎 Envie uma imagem, vídeo ou outro arquivo aceito pelo Discord.",
-        ].join("\n"),
-      });
-
-    // ======================================================
-    // REMOVE O AVISO APÓS 8 SEGUNDOS
-    // ======================================================
-
-    setTimeout(async () => {
-      try {
-        await warningMessage.delete();
-      } catch {
-        // A mensagem pode já ter sido removida.
-      }
-    }, 8000);
-  } catch (error) {
-    console.error(
-      "❌ [TICKET] Não foi possível processar mensagem sem prova:",
-      error
-    );
+    return;
   }
-
-  return;
-}
-
-  // ========================================================
-  // RECUPERA ANEXOS
-  // ========================================================
 
   const attachments =
     Array.from(
@@ -168,10 +150,6 @@ if (
   ) {
     return;
   }
-
-  // ========================================================
-  // REGISTRA PROVAS
-  // ========================================================
 
   try {
     await prisma.ticketProof.createMany({
@@ -210,10 +188,6 @@ if (
     return;
   }
 
-  // ========================================================
-  // QUANTIDADE TOTAL DE PROVAS
-  // ========================================================
-
   const proofCount =
     await prisma.ticketProof.count({
       where: {
@@ -221,38 +195,27 @@ if (
       },
     });
 
-  // ========================================================
-  // VERIFICA SE É A PRIMEIRA PROVA
-  // ========================================================
+  const firstProof =
+    existingProofCount === 0;
 
-  const firstProof = existingProofCount === 0;
+  if (firstProof) {
+    await prisma.ticket.update({
+      where: {
+        id: ticket.id,
+      },
+      data: {
+        proofsSubmittedAt: new Date(),
+      },
+    });
 
-// ========================================================
-// REGISTRA ENVIO DAS PROVAS
-// ========================================================
-
-if (firstProof) {
-  await prisma.ticket.update({
-    where: {
-      id: ticket.id,
-    },
-    data: {
-      proofsSubmittedAt: new Date(),
-    },
-  });
-
-  console.log(
-    "📎 [TICKET] proofsSubmittedAt registrado:",
-    {
-      ticketId: ticket.id,
-      proofsSubmittedAt: new Date(),
-    }
-  );
-}
-
-  // ========================================================
-  // PRIMEIRA PROVA
-  // ========================================================
+    console.log(
+      "📎 [TICKET] proofsSubmittedAt registrado:",
+      {
+        ticketId: ticket.id,
+        proofsSubmittedAt: new Date(),
+      }
+    );
+  }
 
   if (firstProof) {
     console.log(
@@ -268,10 +231,6 @@ if (firstProof) {
     return;
   }
 
-  // ========================================================
-  // PROVA ADICIONAL
-  // ========================================================
-
   console.log(
     "📎 [TICKET] Nova prova adicionada:",
     {
@@ -281,18 +240,10 @@ if (firstProof) {
   );
 }
 
-// ==========================================================
-// CONSTRÓI PAINEL DE ANÁLISE
-// ==========================================================
-
 export async function buildTicketAnalysisContainer(
   message: Message,
   ticketId: string
 ): Promise<void> {
-  // ========================================================
-  // BUSCA TICKET
-  // ========================================================
-
   const ticket =
     await prisma.ticket.findUnique({
       where: {
@@ -320,20 +271,12 @@ export async function buildTicketAnalysisContainer(
     return;
   }
 
-  // ========================================================
-  // BUSCA PROVAS
-  // ========================================================
-
   const proofCount =
     await prisma.ticketProof.count({
       where: {
         ticketId: ticket.id,
       },
     });
-
-  // ========================================================
-  // MONTA LISTA DE MEDALHAS
-  // ========================================================
 
   const medalList =
     ticket.medals
@@ -364,20 +307,9 @@ export async function buildTicketAnalysisContainer(
       )
       .join("\n\n");
 
-  // ========================================================
-  // CONTAINER V2
-  // ========================================================
-
   const container =
     new ContainerBuilder()
-      .setAccentColor(
-        0x3498db
-      )
-
-      // ====================================================
-      // CABEÇALHO
-      // ====================================================
-
+      .setAccentColor(0x3498db)
       .addTextDisplayComponents(
         new TextDisplayBuilder()
           .setContent(
@@ -389,22 +321,10 @@ export async function buildTicketAnalysisContainer(
             ].join("\n")
           )
       )
-
-      // ====================================================
-      // SEPARADOR
-      // ====================================================
-
       .addSeparatorComponents(
         new SeparatorBuilder()
-          .setSpacing(
-            SeparatorSpacingSize.Small
-          )
+          .setSpacing(SeparatorSpacingSize.Small)
       )
-
-      // ====================================================
-      // PROVAS
-      // ====================================================
-
       .addTextDisplayComponents(
         new TextDisplayBuilder()
           .setContent(
@@ -417,22 +337,10 @@ export async function buildTicketAnalysisContainer(
             ].join("\n")
           )
       )
-
-      // ====================================================
-      // SEPARADOR
-      // ====================================================
-
       .addSeparatorComponents(
         new SeparatorBuilder()
-          .setSpacing(
-            SeparatorSpacingSize.Small
-          )
+          .setSpacing(SeparatorSpacingSize.Small)
       )
-
-      // ====================================================
-      // MEDALHAS
-      // ====================================================
-
       .addTextDisplayComponents(
         new TextDisplayBuilder()
           .setContent(
@@ -444,22 +352,10 @@ export async function buildTicketAnalysisContainer(
             ].join("\n")
           )
       )
-
-      // ====================================================
-      // SEPARADOR
-      // ====================================================
-
       .addSeparatorComponents(
         new SeparatorBuilder()
-          .setSpacing(
-            SeparatorSpacingSize.Small
-          )
+          .setSpacing(SeparatorSpacingSize.Small)
       )
-
-      // ====================================================
-      // STATUS
-      // ====================================================
-
       .addTextDisplayComponents(
         new TextDisplayBuilder()
           .setContent(
@@ -471,12 +367,7 @@ export async function buildTicketAnalysisContainer(
               "-# As medalhas podem ser analisadas individualmente.",
               "-# As provas permanecem disponíveis neste canal.",
             ].join("\n")
-          )
-      );
-
-  // ========================================================
-  // BOTÃO DE ENCERRAMENTO
-  // ========================================================
+          );
 
   const closeButton =
     new ButtonBuilder()
@@ -491,20 +382,12 @@ export async function buildTicketAnalysisContainer(
         ButtonStyle.Secondary
       );
 
-  // ========================================================
-  // LINHA PRINCIPAL
-  // ========================================================
-
   container.addActionRowComponents(
     new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-            closeButton
-        )
-);
-
-  // ========================================================
-  // BOTÕES DE ANÁLISE
-  // ========================================================
+      .addComponents(
+        closeButton
+      )
+  );
 
   for (
     const ticketMedal of ticket.medals
@@ -515,10 +398,6 @@ export async function buildTicketAnalysisContainer(
     ) {
       continue;
     }
-
-    // ======================================================
-    // APROVAR
-    // ======================================================
 
     const approveButton =
       new ButtonBuilder()
@@ -536,10 +415,6 @@ export async function buildTicketAnalysisContainer(
           ButtonStyle.Success
         );
 
-    // ======================================================
-    // NEGAR
-    // ======================================================
-
     const denyButton =
       new ButtonBuilder()
         .setCustomId(
@@ -556,10 +431,6 @@ export async function buildTicketAnalysisContainer(
           ButtonStyle.Danger
         );
 
-    // ======================================================
-    // LINHA
-    // ======================================================
-
     container.addActionRowComponents(
       new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
@@ -569,13 +440,8 @@ export async function buildTicketAnalysisContainer(
     );
   }
 
-  // ========================================================
-  // LOCALIZA MENSAGEM PRINCIPAL
-  // ========================================================
-
   try {
-    const channel =
-      message.channel;
+    const channel = message.channel;
 
     if (
       !channel.isTextBased() ||
@@ -589,10 +455,6 @@ export async function buildTicketAnalysisContainer(
       return;
     }
 
-    // ======================================================
-    // ID DO ATLAS
-    // ======================================================
-
     const botUserId =
       message.client.user?.id;
 
@@ -604,18 +466,10 @@ export async function buildTicketAnalysisContainer(
       return;
     }
 
-    // ======================================================
-    // BUSCA MENSAGENS
-    // ======================================================
-
     const messages =
       await channel.messages.fetch({
         limit: 50,
       });
-
-    // ======================================================
-    // MENSAGENS DO ATLAS
-    // ======================================================
 
     const botMessages =
       messages.filter(
@@ -635,10 +489,6 @@ export async function buildTicketAnalysisContainer(
       return;
     }
 
-    // ======================================================
-    // PRIORIZA MENSAGEM COM COMPONENTES
-    // ======================================================
-
     const botMessage =
       botMessages.find(
         (msg) =>
@@ -656,23 +506,14 @@ export async function buildTicketAnalysisContainer(
       return;
     }
 
-    // ======================================================
-    // ATUALIZA MENSAGEM
-    // ======================================================
-
     await botMessage.edit({
       content: null,
       embeds: [],
       components: [
         container,
       ],
-      flags:
-        MessageFlags.IsComponentsV2,
+      flags: MessageFlags.IsComponentsV2,
     });
-
-    // ======================================================
-    // LOG
-    // ======================================================
 
     console.log(
       "✨ [TICKET] Painel de análise atualizado:",
