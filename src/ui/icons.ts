@@ -1,0 +1,15 @@
+export const icons = {
+  user: "👤",
+  server: "📊",
+  members: "👥",
+  owner: "👑",
+  id: "🆔",
+  bot: "🤖",
+  calendar: "📅",
+  join: "📥",
+  success: "✅",
+  error: "❌",
+  warning: "⚠️",
+  settings: "⚙️",
+  shield: "🛡️",
+} as const;

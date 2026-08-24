@@ -1,0 +1,370 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==========================================================
+// CONFIGURAÇÃO DO SERVIDOR
+// ==========================================================
+
+model GuildConfig {
+  id                  String  @id @default(cuid())
+  requestGuildId      String  @unique
+  deliveryGuildId     String?
+  ticketCategoryId    String
+  logChannelId        String
+  transcriptChannelId String
+  staffRoleId         String
+  responsibleRoleId   String?
+
+  medalCatalogMessageId String?
+
+  // Canal onde o catálogo de medalhas será publicado
+  medalCatalogChannelId String?
+
+  ticketPanelChannelId String?
+  ticketPanelMessageId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("guild_configs")
+}
+
+// ==========================================================
+// CATEGORIAS DE MEDALHAS
+// ==========================================================
+
+model MedalCategory {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  emoji       String?
+  position    Int     @default(0)
+  active      Boolean @default(true)
+
+  // ========================================================
+  // MENSAGEM DO CATÁLOGO DESTA CATEGORIA
+  // ========================================================
+  // Cada categoria possui sua própria mensagem no canal
+  // de catálogo.
+  //
+  // Se uma nova medalha for criada nesta categoria,
+  // o Atlas edita esta mensagem em vez de criar outra.
+
+  catalogMessageId String?
+
+  medals Medal[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("medal_categories")
+}
+
+// ==========================================================
+// MEDALHAS
+// ==========================================================
+
+model Medal {
+  id            String  @id @default(cuid())
+  name          String
+  requirements  String
+  jurisprudence String?
+  emoji         String?
+  color         String?
+  categoryId    String
+  active        Boolean @default(true)
+
+  // ========================================================
+  // CATEGORIA
+  // ========================================================
+
+  category MedalCategory @relation(fields: [categoryId], references: [id])
+
+  // ========================================================
+  // CARGOS CONCEDIDOS AO USUÁRIO
+  // ========================================================
+  // Estes são os cargos que o militar receberá efetivamente
+  // no servidor do EB quando a medalha for entregue.
+
+  deliveryRoles MedalRole[]
+
+  // ========================================================
+  // CARGOS AUTORIZADOS A APROVAR/NEGAR
+  // ========================================================
+  // Primeira etapa do fluxo:
+  // equipe analisa -> aprova ou nega.
+
+  approvalRoles MedalApprovalRole[]
+
+  // ========================================================
+  // CARGOS AUTORIZADOS A ACEITAR PARA ENTREGA
+  // ========================================================
+  // Segunda etapa do fluxo:
+  // medalha aprovada -> responsável autorizado aceita
+  // -> medalha fica liberada para entrega.
+
+  deliveryPermissionRoles MedalDeliveryPermissionRole[]
+
+  // ========================================================
+  // SOLICITAÇÕES
+  // ========================================================
+
+  tickets TicketMedal[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([active])
+  @@map("medals")
+}
+
+// ==========================================================
+// CARGOS CONCEDIDOS PELA MEDALHA
+// ==========================================================
+
+model MedalRole {
+  id        String   @id @default(cuid())
+  medalId   String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  medal Medal @relation(fields: [medalId], references: [id], onDelete: Cascade)
+
+  @@unique([medalId, roleId])
+  @@index([medalId])
+  @@map("medal_roles")
+}
+
+// ==========================================================
+// CARGOS AUTORIZADOS A APROVAR/NEGAR
+// ==========================================================
+
+model MedalApprovalRole {
+  id        String   @id @default(cuid())
+  medalId   String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  medal Medal @relation(fields: [medalId], references: [id], onDelete: Cascade)
+
+  @@unique([medalId, roleId])
+  @@index([medalId])
+  @@map("medal_approval_roles")
+}
+
+// ==========================================================
+// CARGOS AUTORIZADOS A ACEITAR PARA ENTREGA
+// ==========================================================
+
+model MedalDeliveryPermissionRole {
+  id        String   @id @default(cuid())
+  medalId   String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  medal Medal @relation(fields: [medalId], references: [id], onDelete: Cascade)
+
+  @@unique([medalId, roleId])
+  @@index([medalId])
+  @@map("medal_delivery_permission_roles")
+}
+
+// ==========================================================
+// TICKETS
+// ==========================================================
+
+model Ticket {
+  id                String       @id @default(cuid())
+  ticketNumber      Int          @unique @default(autoincrement())
+  channelId         String
+  userId            String
+  username          String
+  nickname          String?
+  robloxUsername    String
+  status            TicketStatus @default(OPEN)
+  staffId           String?
+  reason            String?
+  proofsSubmittedAt DateTime?
+  createdAt         DateTime     @default(now())
+  closedAt          DateTime?
+
+  medals TicketMedal[]
+  proofs TicketProof[]
+  logs   AuditLog[]
+
+  transcript Transcript?
+
+  forceCloseApprovals TicketForceCloseApproval[]
+
+  @@index([channelId])
+  @@index([userId])
+  @@index([status])
+  @@map("tickets")
+}
+
+// ==========================================================
+// PROVAS DOS TICKETS
+// ==========================================================
+
+model TicketProof {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String
+  messageId String
+  channelId String
+  url       String
+  fileName  String?
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
+  @@index([userId])
+  @@index([messageId])
+  @@map("ticket_proofs")
+}
+
+// ==========================================================
+// MEDALHAS SOLICITADAS NO TICKET
+// ==========================================================
+
+model TicketMedal {
+  id        String            @id @default(cuid())
+  ticketId  String
+  medalId   String
+  status    TicketMedalStatus @default(PENDING)
+  decidedBy String?
+  reason    String?
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  medal Medal @relation(fields: [medalId], references: [id])
+
+  @@unique([ticketId, medalId])
+  @@index([ticketId])
+  @@index([medalId])
+  @@index([status])
+  @@map("ticket_medals")
+}
+
+// ==========================================================
+// APROVAÇÕES PARA FECHAMENTO FORÇADO
+// ==========================================================
+
+model TicketForceCloseApproval {
+  id        String   @id @default(cuid())
+  ticketId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@unique([ticketId, userId])
+  @@index([ticketId])
+  @@map("ticket_force_close_approvals")
+}
+
+// ==========================================================
+// TRANSCRIPTS
+// ==========================================================
+
+model Transcript {
+  id        String   @id @default(cuid())
+  ticketId  String   @unique
+  url       String
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id])
+
+  @@map("transcripts")
+}
+
+// ==========================================================
+// LOGS DE AUDITORIA
+// ==========================================================
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  action     AuditAction
+  executorId String
+  targetId   String?
+  ticketId   String?
+  medalId    String?
+  details    Json?
+  createdAt  DateTime    @default(now())
+
+  ticket Ticket? @relation(fields: [ticketId], references: [id])
+
+  @@index([action])
+  @@index([executorId])
+  @@index([ticketId])
+  @@index([medalId])
+  @@map("audit_logs")
+}
+
+// ==========================================================
+// STATUS DOS TICKETS
+// ==========================================================
+
+enum TicketStatus {
+  OPEN
+  APPROVED
+  DENIED
+  CLOSED
+}
+
+// ==========================================================
+// STATUS INDIVIDUAL DAS MEDALHAS DO TICKET
+// ==========================================================
+
+enum TicketMedalStatus {
+  PENDING
+  APPROVED
+  DENIED
+  GRANTED
+}
+
+// ==========================================================
+// AÇÕES DE AUDITORIA
+// ==========================================================
+
+enum AuditAction {
+  TICKET_CREATED
+  TICKET_CLOSED
+  TICKET_DELETED
+
+  MEDAL_CREATED
+  MEDAL_UPDATED
+  MEDAL_REMOVED
+
+  // Equipe analisou e aprovou a solicitação
+  MEDAL_APPROVED
+
+  // Pessoa com permissão específica da medalha
+  // aceitou a medalha para entrega
+  MEDAL_ACCEPTED
+
+  // Medalha efetivamente entregue no servidor EB
+  MEDAL_GRANTED
+
+  MEDAL_DENIED
+
+  MEDAL_SELF_DELIVERY_BLOCKED
+  MEDAL_SELF_DELIVERY_ATTEMPT
+
+  TRANSCRIPT_CREATED
+  CONFIG_UPDATED
+
+  CATEGORY_CREATED
+  CATEGORY_UPDATED
+  CATEGORY_REMOVED
+}
