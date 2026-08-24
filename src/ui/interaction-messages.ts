@@ -13,7 +13,17 @@ type MessageMethod =
   | "reply"
   | "update"
   | "editReply"
-  | "followUp";
+  | "followUp"
+  | "deferReply";
+
+const PUBLIC_MESSAGE_HEADERS = [
+  "## 🔒 Ticket encerrado",
+  "## 🏅 Medalha entregue",
+  "## ❌ Medalha negada",
+  "## 🗑️ Ticket excluído",
+  "## ⚠️ Aprovação registrada",
+  "## 🔒 Ticket encerrado forçadamente",
+] as const;
 
 function getAccentColor(content: string): number {
   if (content.includes("❌")) {
@@ -74,7 +84,47 @@ function hasComponentsV2(flags: unknown): boolean {
   );
 }
 
-function normalizeMessagePayload(payload: unknown): unknown {
+function isPublicMessageContent(content: string | null): boolean {
+  if (!content) {
+    return false;
+  }
+
+  const normalized = content.trim();
+
+  return PUBLIC_MESSAGE_HEADERS.some(
+    (header) =>
+      normalized === header ||
+      normalized.startsWith(`${header}\n`)
+  );
+}
+
+function isPublicInteraction(
+  customId: string | undefined
+): boolean {
+  if (!customId) {
+    return false;
+  }
+
+  return (
+    customId === "ticket_close" ||
+    customId.startsWith("ticket_medal_deliver:")
+  );
+}
+
+function removeEphemeralFlag(flags: unknown): unknown {
+  if (typeof flags !== "number") {
+    return flags;
+  }
+
+  return flags & ~MessageFlags.Ephemeral;
+}
+
+function normalizeMessagePayload(
+  payload: unknown,
+  customId?: string
+): unknown {
+  const forcePublic = isPublicInteraction(customId);
+
   if (typeof payload === "string") {
     return {
       flags: MessageFlags.IsComponentsV2,
@@ -88,14 +138,29 @@ function normalizeMessagePayload(payload: unknown): unknown {
 
   const options = payload as Record<string, any>;
 
-  if (hasComponentsV2(options.flags)) {
-    return payload;
-  }
-
   const content =
     typeof options.content === "string"
       ? options.content
       : null;
+
+  const shouldBePublic =
+    forcePublic ||
+    isPublicMessageContent(content);
+
+  const normalizedFlags = shouldBePublic
+    ? removeEphemeralFlag(options.flags)
+    : options.flags;
+
+  if (hasComponentsV2(normalizedFlags)) {
+    if (!shouldBePublic) {
+      return payload;
+    }
+
+    return {
+      ...options,
+      flags: normalizedFlags,
+    };
+  }
 
   const existingComponents = Array.isArray(options.components)
     ? options.components
@@ -105,7 +170,14 @@ function normalizeMessagePayload(payload: unknown): unknown {
     Boolean(content?.trim()) || existingComponents.length > 0;
 
   if (!hasVisibleMessage) {
-    return payload;
+    if (!shouldBePublic) {
+      return payload;
+    }
+
+    return {
+      ...options,
+      flags: normalizedFlags,
+    };
   }
 
   const container = content
@@ -144,8 +216,9 @@ function normalizeMessagePayload(payload: unknown): unknown {
         ...options,
         content: null,
         flags:
-          (typeof options.flags === "number" ? options.flags : 0) |
-          MessageFlags.IsComponentsV2,
+          (typeof normalizedFlags === "number"
+            ? normalizedFlags
+            : 0) | MessageFlags.IsComponentsV2,
       };
     }
   }
@@ -164,8 +237,9 @@ function normalizeMessagePayload(payload: unknown): unknown {
     content: undefined,
     components: [container],
     flags:
-      (typeof options.flags === "number" ? options.flags : 0) |
-      MessageFlags.IsComponentsV2,
+      (typeof normalizedFlags === "number"
+        ? normalizedFlags
+        : 0) | MessageFlags.IsComponentsV2,
   };
 }
 
@@ -189,6 +263,7 @@ export function installInteractionMessageStyle(
     "update",
     "editReply",
     "followUp",
+    "deferReply",
   ];
 
   for (const method of methods) {
@@ -203,7 +278,10 @@ export function installInteractionMessageStyle(
       ...rest: unknown[]
     ) =>
       original(
-        normalizeMessagePayload(payload),
+        normalizeMessagePayload(
+          payload,
+          target.customId
+        ),
         ...rest
       );
   }
