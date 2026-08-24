@@ -367,7 +367,7 @@ export async function buildTicketAnalysisContainer(
               "-# As medalhas podem ser analisadas individualmente.",
               "-# As provas permanecem disponíveis neste canal.",
             ].join("\n")
-          );
+          ));
 
   const closeButton =
     new ButtonBuilder()
