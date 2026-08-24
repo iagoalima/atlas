@@ -214,14 +214,21 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     return;
   }
 
+  const categoryData: {
+    name?: string;
+    description?: string | null;
+    emoji?: string | null;
+    position?: number;
+  } = {};
+
+  if (name !== null) categoryData.name = name.trim();
+  if (description !== null) categoryData.description = description.toLowerCase() === "none" ? null : description.trim() || null;
+  if (emoji !== null) categoryData.emoji = emoji.toLowerCase() === "none" ? null : emoji.trim() || null;
+  if (position !== null) categoryData.position = position;
+
   const updated = await prisma.medalCategory.update({
     where: { id: category.id },
-    data: {
-      name: name !== null ? name.trim() : undefined,
-      description: description !== null ? (description.toLowerCase() === "none" ? null : description.trim() || null) : undefined,
-      emoji: emoji !== null ? (emoji.toLowerCase() === "none" ? null : emoji.trim() || null) : undefined,
-      position: position !== null ? position : undefined,
-    },
+    data: categoryData,
   });
 
   await logAuditEvent({
