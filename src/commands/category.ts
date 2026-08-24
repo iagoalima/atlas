@@ -12,6 +12,8 @@ import {
   logAuditEvent,
 } from "../services/audit-log.service.js";
 
+import { updateMedalCatalog } from "../services/medal-catalog.service.js";
+
 import { prisma } from "../infrastructure/database/prisma.js";
 import { Command } from "../types/command.js";
 
@@ -165,38 +167,53 @@ export async function handleCategoryModal(
     },
   });
 
-  // ========================================================
-  // AUDIT LOG
-  // ========================================================
-
   await logAuditEvent({
     guild: interaction.guild,
-
     action: "CATEGORY_CREATED",
-
-    executorId:
-      interaction.user.id,
-
+    executorId: interaction.user.id,
     details: {
-      categoryId:
-        category.id,
-
-      name:
-        category.name,
-
-      description:
-        category.description,
-
-      emoji:
-        category.emoji,
-
-      position:
-        category.position,
+      categoryId: category.id,
+      name: category.name,
+      description: category.description,
+      emoji: category.emoji,
+      position: category.position,
     },
   });
 
+  // ========================================================
+  // SINCRONIZA O CATÁLOGO
+  // ========================================================
+
+  let catalogSynced = false;
+
+  try {
+    catalogSynced = await updateMedalCatalog(interaction.guild);
+  } catch (error) {
+    console.warn(
+      "⚠️ [CATEGORY] Categoria criada, mas não foi possível sincronizar o catálogo:",
+      error
+    );
+  }
+
   await interaction.reply({
-    content: `✅ Categoria **${category.name}** criada com sucesso.`,
+    content: [
+      "## 🗂️ Categoria criada com sucesso",
+      "",
+      `📁 **${category.name}**`,
+      `🔢 **Posição:** ${category.position}`,
+      category.description
+        ? `📝 **Descrição:** ${category.description}`
+        : null,
+      category.emoji
+        ? `✨ **Emoji:** ${category.emoji}`
+        : null,
+      "",
+      catalogSynced
+        ? "✅ O catálogo também foi sincronizado automaticamente."
+        : "⚠️ A categoria foi salva, mas o catálogo não pôde ser sincronizado. Verifique a configuração do catálogo.",
+    ]
+      .filter(Boolean)
+      .join("\n"),
     flags: MessageFlags.Ephemeral,
   });
 }
