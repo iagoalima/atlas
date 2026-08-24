@@ -9,6 +9,32 @@ const __dirname = path.dirname(__filename);
 
 export const commands = new Collection<string, Command>();
 
+function configureAdminAutocompletes(command: Command): void {
+  const builder = command.data as any;
+
+  if (command.data.name === "categoria-admin") {
+    for (const subcommand of builder.options ?? []) {
+      const categoryOption = (subcommand.options ?? []).find(
+        (option: any) => option.name === "categoria"
+      );
+
+      if (categoryOption) {
+        categoryOption.autocomplete = true;
+      }
+    }
+  }
+
+  if (command.data.name === "medal-admin") {
+    for (const subcommand of builder.options ?? []) {
+      for (const option of subcommand.options ?? []) {
+        if (option.name === "medalha" || option.name === "categoria") {
+          option.autocomplete = true;
+        }
+      }
+    }
+  }
+}
+
 export async function loadCommands(): Promise<void> {
   const commandsPath = path.resolve(__dirname, "../../commands");
   const files = await readdir(commandsPath);
@@ -26,10 +52,14 @@ export async function loadCommands(): Promise<void> {
       continue;
     }
 
-    commands.set(command.data.name, {
+    const loadedCommand: Command = {
       data: command.data,
       execute: command.execute,
-    });
+    };
+
+    configureAdminAutocompletes(loadedCommand);
+
+    commands.set(command.data.name, loadedCommand);
 
     console.log(`📦 Comando carregado: /${command.data.name}`);
   }
