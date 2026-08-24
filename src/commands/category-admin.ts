@@ -64,6 +64,18 @@ export const data = new SlashCommandBuilder()
           .setRequired(true)
           .setMaxLength(100)
       )
+  )
+  .addSubcommand((subcommand) =>
+    subcommand
+      .setName("reativar")
+      .setDescription("Reativa uma categoria desativada.")
+      .addStringOption((option) =>
+        option
+          .setName("categoria")
+          .setDescription("ID ou nome da categoria.")
+          .setRequired(true)
+          .setMaxLength(100)
+      )
   );
 
 async function findCategory(identifier: string) {
@@ -109,13 +121,68 @@ export async function execute(
 
   if (!category) {
     await interaction.reply({
-      content: `❌ Não foi encontrada nenhuma categoria correspondente a **${identifier}**.`,
+      content: [
+        "## ❌ Categoria não encontrada",
+        "",
+        `Não foi encontrada nenhuma categoria correspondente a **${identifier}**.`,
+      ].join("\n"),
       flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
   const subcommand = interaction.options.getSubcommand();
+
+  // ========================================================
+  // REATIVAR
+  // ========================================================
+
+  if (subcommand === "reativar") {
+    if (category.active) {
+      await interaction.reply({
+        content: "⚠️ Esta categoria já está ativa.",
+        flags: MessageFlags.Ephemeral,
+      });
+      return;
+    }
+
+    const updated = await prisma.medalCategory.update({
+      where: { id: category.id },
+      data: { active: true },
+    });
+
+    await logAuditEvent({
+      guild: interaction.guild,
+      action: "CATEGORY_UPDATED",
+      executorId: interaction.user.id,
+      details: {
+        categoryId: updated.id,
+        name: updated.name,
+        changedFields: ["active"],
+        operation: "reactivate",
+      },
+    });
+
+    const catalogSynced = await updateMedalCatalog(interaction.guild);
+
+    await interaction.reply({
+      content: [
+        "## ♻️ Categoria reativada",
+        "",
+        `🗂️ **${updated.name}** foi reativada com sucesso.`,
+        "",
+        catalogSynced
+          ? "✅ O catálogo foi sincronizado automaticamente."
+          : "⚠️ A categoria foi reativada, mas o catálogo não pôde ser sincronizado.",
+      ].join("\n"),
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  // ========================================================
+  // EXCLUIR
+  // ========================================================
 
   if (subcommand === "excluir") {
     if (!category.active) {
@@ -145,7 +212,7 @@ export async function execute(
       },
     });
 
-    await updateMedalCatalog(interaction.guild);
+    const catalogSynced = await updateMedalCatalog(interaction.guild);
 
     await interaction.reply({
       content: [
@@ -153,12 +220,19 @@ export async function execute(
         "",
         `🗂️ **${category.name}** foi desativada com sucesso.`,
         "",
-        "As medalhas e registros históricos permanecem no banco, mas a categoria e suas medalhas ativas deixam de aparecer no catálogo.",
+        "As medalhas e registros históricos permanecem no banco.",
+        catalogSynced
+          ? "✅ A publicação da categoria foi removida do catálogo."
+          : "⚠️ A categoria foi desativada, mas o catálogo não pôde ser sincronizado.",
       ].join("\n"),
       flags: MessageFlags.Ephemeral,
     });
     return;
   }
+
+  // ========================================================
+  // EDITAR
+  // ========================================================
 
   const name = interaction.options.getString("nome");
   const description = interaction.options.getString("descricao");
@@ -168,6 +242,14 @@ export async function execute(
   if (name === null && description === null && emoji === null && position === null) {
     await interaction.reply({
       content: "⚠️ Informe pelo menos um campo para alterar.",
+      flags: MessageFlags.Ephemeral,
+    });
+    return;
+  }
+
+  if (!category.active) {
+    await interaction.reply({
+      content: "❌ Esta categoria está desativada. Reative-a antes de editá-la.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -225,6 +307,10 @@ export async function execute(
     details: {
       categoryId: updated.id,
       name: updated.name,
+      previousName: category.name,
+      previousDescription: category.description,
+      previousEmoji: category.emoji,
+      previousPosition: category.position,
       changedFields: [
         name !== null ? "name" : null,
         description !== null ? "description" : null,
@@ -234,7 +320,7 @@ export async function execute(
     },
   });
 
-  await updateMedalCatalog(interaction.guild);
+  const catalogSynced = await updateMedalCatalog(interaction.guild);
 
   await interaction.reply({
     content: [
@@ -242,7 +328,10 @@ export async function execute(
       "",
       `🗂️ **${updated.name}**`,
       "",
-      "As alterações foram salvas e o catálogo foi sincronizado automaticamente.",
+      "As alterações foram salvas.",
+      catalogSynced
+        ? "✅ O catálogo foi sincronizado automaticamente."
+        : "⚠️ O catálogo não pôde ser sincronizado.",
     ].join("\n"),
     flags: MessageFlags.Ephemeral,
   });
