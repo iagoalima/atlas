@@ -1,4 +1,9 @@
 import {
+    ContainerBuilder,
+    MessageFlags,
+    SeparatorBuilder,
+    SeparatorSpacingSize,
+    TextDisplayBuilder,
     TextChannel,
 } from "discord.js";
 
@@ -12,19 +17,11 @@ import {
     logAuditEvent,
 } from "./audit-log.service.js";
 
-// ==========================================================
-// CRIA TRANSCRIPT DO TICKET
-// ==========================================================
-
 export async function createTicketTranscript(
     channel: TextChannel,
     ticketId: string,
     executorId: string
 ): Promise<string | null> {
-    // ========================================================
-    // VERIFICA SE JÁ EXISTE
-    // ========================================================
-
     const existingTranscript =
         await prisma.transcript.findUnique({
             where: {
@@ -40,10 +37,6 @@ export async function createTicketTranscript(
 
         return existingTranscript.url;
     }
-
-    // ========================================================
-    // BUSCA TICKET
-    // ========================================================
 
     const ticket =
         await prisma.ticket.findUnique({
@@ -61,10 +54,6 @@ export async function createTicketTranscript(
         return null;
     }
 
-    // ========================================================
-    // BUSCA CONFIGURAÇÃO
-    // ========================================================
-
     const config =
         await prisma.guildConfig.findUnique({
             where: {
@@ -81,10 +70,6 @@ export async function createTicketTranscript(
 
         return null;
     }
-
-    // ========================================================
-    // BUSCA CANAL DE TRANSCRIPTS
-    // ========================================================
 
     const transcriptChannel =
         await channel.client.channels.fetch(
@@ -114,26 +99,10 @@ export async function createTicketTranscript(
         return null;
     }
 
-    // ========================================================
-    // GERA TRANSCRIPT
-    // ========================================================
-
     console.log(
         "📄 [TRANSCRIPT] Gerando transcript:",
         ticketId
     );
-
-    /*
-     * @devjacob/discord-html-transcripts possui declarações
-     * próprias que podem entrar em conflito com os tipos
-     * do discord.js do projeto quando:
-     *
-     * exactOptionalPropertyTypes = true
-     *
-     * Em runtime, porém, trata-se do mesmo objeto do
-     * discord.js. O cast fica restrito somente à chamada
-     * da biblioteca.
-     */
 
     const transcript =
         await createTranscript(
@@ -142,38 +111,52 @@ export async function createTicketTranscript(
             >[0],
             {
                 limit: -1,
-
                 filename:
                     `ticket-${ticket.ticketNumber}.html`,
-
                 poweredBy:
                     false,
             }
         );
 
-    // ========================================================
-    // ENVIA TRANSCRIPT
-    // ========================================================
+    const transcriptContainer =
+        new ContainerBuilder()
+            .setAccentColor(0x5865f2)
+            .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(
+                    [
+                        "# 📄 Transcript do Ticket",
+                        "",
+                        `🎫 **Ticket:** \`#${ticket.ticketNumber}\``,
+                        `👤 **Usuário:** <@${ticket.userId}>`,
+                    ].join("\n")
+                )
+            )
+            .addSeparatorComponents(
+                new SeparatorBuilder()
+                    .setSpacing(SeparatorSpacingSize.Small)
+            )
+            .addTextDisplayComponents(
+                new TextDisplayBuilder().setContent(
+                    [
+                        "## 📎 Arquivo",
+                        "",
+                        "A transcrição completa desta solicitação está anexada abaixo.",
+                        "",
+                        "-# O transcript foi gerado pelo Atlas e permanece registrado para histórico e auditoria.",
+                    ].join("\n")
+                )
+            );
 
     const message =
         await transcriptChannel.send({
-            content: [
-                "## 📄 Transcript do Ticket",
-                "",
-                `🎫 **Ticket:** \`#${ticket.ticketNumber}\``,
-                `👤 **Usuário:** <@${ticket.userId}>`,
-                "",
-                "A transcrição completa desta solicitação está anexada abaixo.",
-            ].join("\n"),
-
+            components: [
+                transcriptContainer,
+            ],
+            flags: MessageFlags.IsComponentsV2,
             files: [
                 transcript,
             ],
         });
-
-    // ========================================================
-    // OBTÉM URL
-    // ========================================================
 
     const attachment =
         message.attachments.first();
@@ -190,53 +173,33 @@ export async function createTicketTranscript(
     const url =
         attachment.url;
 
-    // ========================================================
-    // SALVA NO BANCO
-    // ========================================================
-
     await prisma.transcript.create({
         data: {
             ticketId,
-
             url,
         },
     });
 
-    // ========================================================
-    // AUDITORIA
-    // ========================================================
-
     await logAuditEvent({
         guild:
             channel.guild,
-
         action:
             "TRANSCRIPT_CREATED",
-
         executorId,
-
         targetId:
             ticket.userId,
-
         ticketId,
-
         details: {
             url,
-
             transcriptChannelId:
                 config.transcriptChannelId,
         },
     });
 
-    // ========================================================
-    // LOG LOCAL
-    // ========================================================
-
     console.log(
         "📄 [TRANSCRIPT] Transcript criada:",
         {
             ticketId,
-
             url,
         }
     );
