@@ -8,6 +8,7 @@ import {
 } from "./discord/commands.js";
 
 import { connectDatabase } from "./database.js";
+import { installInteractionMessageStyle } from "../ui/interaction-messages.js";
 
 // ==========================================================
 // ATLAS ONLINE
@@ -85,6 +86,17 @@ client.on(
 
     try {
       // ======================================================
+      // PADRÃO VISUAL DO ATLAS
+      // ======================================================
+      //
+      // Todas as respostas textuais de interações passam por
+      // uma camada central que converte respostas legadas para
+      // Components V2. Respostas que já utilizam Components V2
+      // permanecem intactas.
+      //
+      installInteractionMessageStyle(interaction);
+
+      // ======================================================
       // BOTÕES
       // ======================================================
 
@@ -153,10 +165,6 @@ client.on(
         interaction.isRoleSelectMenu() ||
         interaction.isChannelSelectMenu()
       ) {
-        // ====================================================
-        // SELECTS DO SETUP
-        // ====================================================
-
         console.log(
           "🔽 [INTERACTION] Select de configuração recebido:",
           interaction.customId
@@ -189,10 +197,6 @@ client.on(
           interaction.customId
         );
 
-        // ====================================================
-        // SELECT DE CATEGORIA DA MEDALHA
-        // ====================================================
-
         if (
           interaction.customId.startsWith(
             "medal_category_select:"
@@ -210,10 +214,6 @@ client.on(
 
           return;
         }
-
-        // ====================================================
-        // SELECT DE CARGOS DA MEDALHA
-        // ====================================================
 
         if (
           interaction.customId.startsWith(
@@ -241,10 +241,6 @@ client.on(
           return;
         }
 
-        // ====================================================
-        // SELECT DE CARGOS AUTORIZADOS A APROVAR/NEGAR
-        // ====================================================
-
         if (
           interaction.customId.startsWith(
             "medal_approval_roles:"
@@ -271,10 +267,6 @@ client.on(
           return;
         }
 
-        // ====================================================
-        // SELECT DE CARGOS AUTORIZADOS A ENTREGAR
-        // ====================================================
-
         if (
           interaction.customId.startsWith(
             "medal_delivery_permission_roles:"
@@ -300,10 +292,6 @@ client.on(
 
           return;
         }
-
-        // ====================================================
-        // SELECT DE MEDALHAS DO TICKET
-        // ====================================================
 
         if (
           interaction.customId.startsWith(
@@ -340,10 +328,6 @@ client.on(
           interaction.customId
         );
 
-        // ----------------------------------------------------
-        // MODAL DE IDENTIFICAÇÃO DO ROBLOX
-        // ----------------------------------------------------
-
         if (
           interaction.customId.startsWith(
             "ticket_roblox_modal:"
@@ -370,10 +354,6 @@ client.on(
           return;
         }
 
-        // ----------------------------------------------------
-        // MODAL DE CRIAÇÃO DE MEDALHA
-        // ----------------------------------------------------
-
         if (
           interaction.customId ===
           "medal_create"
@@ -399,10 +379,6 @@ client.on(
           return;
         }
 
-        // ----------------------------------------------------
-        // MODAL DE CRIAÇÃO DE CATEGORIA
-        // ----------------------------------------------------
-
         if (
           interaction.customId ===
           "category_create"
@@ -427,10 +403,6 @@ client.on(
 
           return;
         }
-
-        // ----------------------------------------------------
-        // MODAL DE SERVIDOR DE ENTREGA
-        // ----------------------------------------------------
 
         if (
           interaction.customId ===
