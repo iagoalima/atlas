@@ -6,6 +6,10 @@ import {
 } from "discord.js";
 
 import { colors } from "./colors.js";
+import {
+  replaceAnimatedEmojis,
+  replaceAnimatedEmojisInComponents,
+} from "./animated-emojis.js";
 
 const STYLE_WRAPPED = Symbol("atlasInteractionMessageStyleWrapped");
 
@@ -50,7 +54,7 @@ function getAccentColor(content: string): number {
 }
 
 function buildContainer(content: string): ContainerBuilder {
-  const normalized = content.trim();
+  const normalized = replaceAnimatedEmojis(content.trim());
   const lines = normalized.split("\n");
 
   const firstBlankLine = lines.indexOf("");
@@ -61,7 +65,7 @@ function buildContainer(content: string): ContainerBuilder {
   const body = lines.slice(headerEnd).join("\n").trim();
 
   const container = new ContainerBuilder().setAccentColor(
-    getAccentColor(normalized)
+    getAccentColor(content)
   );
 
   container.addTextDisplayComponents(
@@ -152,12 +156,16 @@ function normalizeMessagePayload(
     : options.flags;
 
   if (hasComponentsV2(normalizedFlags)) {
-    if (!shouldBePublic) {
-      return payload;
-    }
-
     return {
       ...options,
+      content:
+        typeof options.content === "string"
+          ? replaceAnimatedEmojis(options.content)
+          : options.content,
+      components:
+        replaceAnimatedEmojisInComponents(
+          options.components
+        ),
       flags: normalizedFlags,
     };
   }
@@ -205,16 +213,27 @@ function normalizeMessagePayload(
     }
 
     if (type === 10) {
-      container.addTextDisplayComponents(component);
+      const json =
+        typeof component.toJSON === "function"
+          ? component.toJSON()
+          : component;
+
+      container.addTextDisplayComponents(
+        new TextDisplayBuilder().setContent(
+          replaceAnimatedEmojis(json.content ?? "")
+        )
+      );
       continue;
     }
 
     if (type === 17) {
-      // A container is already a complete V2 layout. Preserve it as-is
-      // rather than nesting a container inside another container.
       return {
         ...options,
         content: null,
+        components:
+          replaceAnimatedEmojisInComponents(
+            options.components
+          ),
         flags:
           (typeof normalizedFlags === "number"
             ? normalizedFlags
