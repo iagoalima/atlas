@@ -4,6 +4,7 @@ import {
   SlashCommandBuilder,
 } from "discord.js";
 
+import { Prisma } from "../generated/prisma/client.js";
 import { prisma } from "../infrastructure/database/prisma.js";
 import { logAuditEvent } from "../services/audit-log.service.js";
 import { updateMedalCatalog } from "../services/medal-catalog.service.js";
@@ -99,7 +100,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
   }
 
   const categoryData: { name?: string; description?: string | null; emoji?: string | null; position?: number } = {};
-  const changes: Array<{ field: string; before: unknown; after: unknown }> = [];
+  const changes: Array<{ field: string; before: Prisma.InputJsonValue | null; after: Prisma.InputJsonValue | null }> = [];
 
   if (name !== null) {
     const next = name.trim();
