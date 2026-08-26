@@ -2,36 +2,32 @@
 // EMOJIS ANIMADOS DO ATLAS
 // ==========================================================
 //
-// Os valores abaixo devem ser preenchidos com a sintaxe do
-// emoji personalizado do Discord, por exemplo:
-//
-// <a:success:123456789012345678>
-//
-// Mantemos um fallback estático para que o Atlas continue
-// funcionando normalmente antes dos emojis serem configurados.
+// IDs dos emojis personalizados cadastrados no servidor Atlas.
+// Variáveis de ambiente podem sobrescrever os valores.
 // ==========================================================
 
 export const animatedEmojis = {
   medalGranted:
-    process.env.ATLAS_EMOJI_MEDAL_GRANTED ?? "🏅",
-
+    process.env.ATLAS_EMOJI_MEDAL_GRANTED ??
+    "<a:medal_granted:1541970399514992741>",
   error:
-    process.env.ATLAS_EMOJI_ERROR ?? "❌",
-
+    process.env.ATLAS_EMOJI_ERROR ??
+    "<a:error:1541970321547198544>",
   success:
-    process.env.ATLAS_EMOJI_SUCCESS ?? "✅",
-
+    process.env.ATLAS_EMOJI_SUCCESS ??
+    "<a:success:1541975920611430570>",
   warning:
-    process.env.ATLAS_EMOJI_WARNING ?? "⚠️",
-
+    process.env.ATLAS_EMOJI_WARNING ??
+    "<a:warning:1541970493102628874>",
   loading:
-    process.env.ATLAS_EMOJI_LOADING ?? "🔄",
-
+    process.env.ATLAS_EMOJI_LOADING ??
+    "<a:loading:1541970363506757712>",
   analysis:
-    process.env.ATLAS_EMOJI_ANALYSIS ?? "🔍",
-
+    process.env.ATLAS_EMOJI_ANALYSIS ??
+    "<a:analysis:1541970235538669678>",
   configuration:
-    process.env.ATLAS_EMOJI_CONFIGURATION ?? "🛠️",
+    process.env.ATLAS_EMOJI_CONFIGURATION ??
+    "<a:configuration:1541975079141908500>",
 } as const;
 
 // ==========================================================
@@ -105,12 +101,6 @@ function replaceAnimatedEmojisInComponent(
             : child
         )
     );
-  }
-
-  if (result.emoji?.name) {
-    result.emoji = {
-      ...result.emoji,
-    };
   }
 
   return result;
