@@ -73,6 +73,13 @@ function formatUser(userId?: string | null): string | null {
   return userId ? `<@${userId}>` : null;
 }
 
+async function resolveDisplayName(guild: Guild, userId?: string | null): Promise<string | null> {
+  if (!userId) return null;
+
+  const member = await guild.members.fetch(userId).catch(() => null);
+  return member?.displayName ?? null;
+}
+
 function asRecord(details?: Prisma.InputJsonValue | null): Record<string, unknown> | null {
   if (!details || typeof details !== "object" || Array.isArray(details)) return null;
   return details as Record<string, unknown>;
@@ -126,7 +133,11 @@ function formatMedal(medalId?: string | null, details?: Prisma.InputJsonValue | 
   return medalId ? "Medalha" : null;
 }
 
-function buildDetailsSection(action: AuditAction, details?: Prisma.InputJsonValue | null): string | null {
+async function buildDetailsSection(
+  guild: Guild,
+  action: AuditAction,
+  details?: Prisma.InputJsonValue | null
+): Promise<string | null> {
   const data = asRecord(details);
   if (!data) return null;
 
@@ -145,8 +156,8 @@ function buildDetailsSection(action: AuditAction, details?: Prisma.InputJsonValu
         if (!participant || typeof participant !== "object" || Array.isArray(participant)) return [];
         const item = participant as Record<string, unknown>;
         const id = typeof item.id === "string" ? item.id : null;
-        const username = typeof item.username === "string" ? item.username : id ?? "Desconhecido";
-        return [`<@${id ?? "0"}> | ${username}`];
+        const displayName = typeof item.displayName === "string" ? item.displayName : id ?? "Desconhecido";
+        return [`<@${id ?? "0"}> | ${displayName}`];
       });
       if (participants.length) lines.push("", "## 👥 Participantes", "", ...participants);
     }
@@ -211,7 +222,9 @@ export async function sendAuditLog(params: SendAuditLogParams): Promise<void> {
   const actionInfo = actionLabels[params.action];
   const ticketDisplay = await formatTicket(params.guild, params.ticketId, params.details);
   const medalDisplay = formatMedal(params.medalId, params.details);
-  const detailsSection = buildDetailsSection(params.action, params.details);
+  const detailsSection = await buildDetailsSection(params.guild, params.action, params.details);
+  const executorDisplayName = await resolveDisplayName(params.guild, params.executorId);
+  const targetDisplayName = await resolveDisplayName(params.guild, params.targetId);
 
   const container = new ContainerBuilder()
     .setAccentColor(getActionColor(params.action))
@@ -225,11 +238,13 @@ export async function sendAuditLog(params: SendAuditLogParams): Promise<void> {
       "## 📋 Evento",
       "",
       `🕐 **Data:** ${formatDate()}`,
-      `🛡️ **Responsável:** ${formatUser(params.executorId) ?? "Não informado"}`,
+      `🛡️ **Responsável:** ${formatUser(params.executorId) ?? "Não informado"}${executorDisplayName ? ` | ${executorDisplayName}` : ""}`,
     ].join("\n")));
 
   const people: string[] = [];
-  if (params.targetId) people.push(`👤 **Solicitante:** ${formatUser(params.targetId)}`);
+  if (params.targetId) {
+    people.push(`👤 **Solicitante:** ${formatUser(params.targetId)}${targetDisplayName ? ` | ${targetDisplayName}` : ""}`);
+  }
   if (people.length) {
     container
       .addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small))
