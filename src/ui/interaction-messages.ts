@@ -295,13 +295,40 @@ export function installInteractionMessageStyle(
     target[method] = (
       payload: unknown,
       ...rest: unknown[]
-    ) =>
-      original(
+    ) => {
+      if (method === "reply") {
+        const normalizedPayload = normalizeMessagePayload(
+          payload,
+          target.customId
+        );
+
+        if (target.deferred) {
+          return target.editReply(
+            normalizedPayload,
+            ...rest
+          );
+        }
+
+        if (target.replied) {
+          return target.followUp(
+            normalizedPayload,
+            ...rest
+          );
+        }
+
+        return original(
+          normalizedPayload,
+          ...rest
+        );
+      }
+
+      return original(
         normalizeMessagePayload(
           payload,
           target.customId
         ),
         ...rest
       );
+    };
   }
 }
