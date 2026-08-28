@@ -35,7 +35,8 @@ export const animatedEmojis = {
 // ==========================================================
 //
 // Regra visual do Atlas:
-// - Somente o primeiro emoji do conteúdo pode ser animado.
+// - Somente o primeiro emoji visível do conteúdo pode ser animado.
+// - Marcadores de título Markdown antes dele (#, ##, etc.) são aceitos.
 // - Emojis no meio ou no final permanecem estáticos.
 // - 🟢 permanece sempre estático.
 // ==========================================================
@@ -65,7 +66,7 @@ function getAnimatedEmoji(emoji: string): string {
 
 export function replaceAnimatedEmojis(content: string): string {
   const match = content.match(
-    /^(\s*)(❌|⚠️|✅|🔄|🔍|⚙️|🛠️|🏅|🎖️)(?=\s|$)/
+    /^(\s*(?:#{1,6}\s*)?)(❌|⚠️|✅|🔄|🔍|⚙️|🛠️|🏅|🎖️)(?=\s|$)/
   );
 
   if (!match) {
