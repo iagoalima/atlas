@@ -303,17 +303,17 @@ export function installInteractionMessageStyle(
         );
 
         if (target.deferred) {
-          return target.editReply(
-            normalizedPayload,
-            ...rest
-          );
+          const editReply = target.editReply;
+          return typeof editReply === "function"
+            ? editReply.call(target, normalizedPayload, ...rest)
+            : original(normalizedPayload, ...rest);
         }
 
         if (target.replied) {
-          return target.followUp(
-            normalizedPayload,
-            ...rest
-          );
+          const followUp = target.followUp;
+          return typeof followUp === "function"
+            ? followUp.call(target, normalizedPayload, ...rest)
+            : original(normalizedPayload, ...rest);
         }
 
         return original(
