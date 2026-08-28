@@ -33,21 +33,46 @@ export const animatedEmojis = {
 // ==========================================================
 // SUBSTITUI EMOJIS ESTÁTICOS PELOS ANIMADOS
 // ==========================================================
+//
+// Regra visual do Atlas:
+// - Somente o primeiro emoji do conteúdo pode ser animado.
+// - Emojis no meio ou no final permanecem estáticos.
+// - 🟢 permanece sempre estático.
+// ==========================================================
 
-export function replaceAnimatedEmojis(
-  content: string
-): string {
-  return content
-    .replaceAll("❌", animatedEmojis.error)
-    .replaceAll("⚠️", animatedEmojis.warning)
-    .replaceAll("✅", animatedEmojis.success)
-    .replaceAll("🟢", animatedEmojis.success)
-    .replaceAll("🔄", animatedEmojis.loading)
-    .replaceAll("🔍", animatedEmojis.analysis)
-    .replaceAll("⚙️", animatedEmojis.configuration)
-    .replaceAll("🛠️", animatedEmojis.configuration)
-    .replaceAll("🏅", animatedEmojis.medalGranted)
-    .replaceAll("🎖️", animatedEmojis.medalGranted);
+function getAnimatedEmoji(emoji: string): string {
+  switch (emoji) {
+    case "❌":
+      return animatedEmojis.error;
+    case "⚠️":
+      return animatedEmojis.warning;
+    case "✅":
+      return animatedEmojis.success;
+    case "🔄":
+      return animatedEmojis.loading;
+    case "🔍":
+      return animatedEmojis.analysis;
+    case "⚙️":
+    case "🛠️":
+      return animatedEmojis.configuration;
+    case "🏅":
+    case "🎖️":
+      return animatedEmojis.medalGranted;
+    default:
+      return emoji;
+  }
+}
+
+export function replaceAnimatedEmojis(content: string): string {
+  const match = content.match(
+    /^(\s*)(❌|⚠️|✅|🔄|🔍|⚙️|🛠️|🏅|🎖️)(?=\s|$)/
+  );
+
+  if (!match) {
+    return content;
+  }
+
+  return `${match[1]}${getAnimatedEmoji(match[2])}${content.slice(match[0].length)}`;
 }
 
 // ==========================================================
