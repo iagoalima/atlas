@@ -34,18 +34,18 @@ function cleanText(text: string): string {
 }
 
 // ==========================================================
-// OBTÉM MENÇÕES DOS CARGOS DE APROVAÇÃO
+// OBTÉM MENÇÕES DOS CARGOS AUTORIZADOS PARA ENTREGA
 // ==========================================================
 
-function buildApprovalRoles(
+function buildDeliveryPermissionRoles(
   guild: Guild,
   roles: { roleId: string }[]
 ): string {
   if (roles.length === 0) {
-    return "_Nenhum cargo de aprovação configurado._";
+    return "_Nenhum cargo autorizado para entrega configurado._";
   }
 
-  const mentions = roles
+  return roles
     .map(({ roleId }) => {
       const role = guild.roles.cache.get(roleId);
 
@@ -56,8 +56,20 @@ function buildApprovalRoles(
       return `<@&${role.id}>`;
     })
     .join(" • ");
+}
 
-  return mentions;
+// ==========================================================
+// CONVERTE COR HEX PARA NÚMERO
+// ==========================================================
+
+function hexToNumber(hex: string): number | null {
+  const normalized = hex.replace("#", "").trim();
+
+  if (!/^[0-9A-Fa-f]{6}$/.test(normalized)) {
+    return null;
+  }
+
+  return parseInt(normalized, 16);
 }
 
 // ==========================================================
@@ -78,7 +90,9 @@ export async function buildMedalCategoryComponents(
           active: true,
         },
         include: {
-          approvalRoles: {
+          // O catálogo deve mostrar quem pode ENTREGAR a medalha,
+          // e não quem pode apenas aprovar/negá-la.
+          deliveryPermissionRoles: {
             select: {
               roleId: true,
             },
@@ -110,32 +124,16 @@ export async function buildMedalCategoryComponents(
   // ========================================================
 
   const firstMedalWithColor = category.medals.find(
-  (medal) => medal.color
-);
-
-if (firstMedalWithColor?.color) {
-  const color = hexToNumber(
-    firstMedalWithColor.color
+    (medal) => medal.color
   );
 
-  if (color !== null) {
-    container.setAccentColor(color);
+  if (firstMedalWithColor?.color) {
+    const color = hexToNumber(firstMedalWithColor.color);
+
+    if (color !== null) {
+      container.setAccentColor(color);
+    }
   }
-}
-
-// ==========================================================
-// CONVERTE COR HEX PARA NÚMERO
-// ==========================================================
-
-function hexToNumber(hex: string): number | null {
-  const normalized = hex.replace("#", "").trim();
-
-  if (!/^[0-9A-Fa-f]{6}$/.test(normalized)) {
-    return null;
-  }
-
-  return parseInt(normalized, 16);
-}
 
   // ========================================================
   // CABEÇALHO DA CATEGORIA
@@ -168,21 +166,19 @@ function hexToNumber(hex: string): number | null {
   // ========================================================
 
   for (let index = 0; index < category.medals.length; index++) {
-  const medal = category.medals[index];
+    const medal = category.medals[index];
 
-  if (!medal) {
-    continue;
-  }
+    if (!medal) {
+      continue;
+    }
 
-  const sections: string[] = [];
+    const sections: string[] = [];
 
     // ======================================================
     // NOME
     // ======================================================
 
-    sections.push(
-      `## ${medal.emoji ?? "🎖️"} ${medal.name}`
-    );
+    sections.push(`## ${medal.emoji ?? "🎖️"} ${medal.name}`);
 
     // ======================================================
     // REQUISITOS
@@ -207,15 +203,15 @@ function hexToNumber(hex: string): number | null {
     }
 
     // ======================================================
-    // CARGOS DE APROVAÇÃO
+    // CARGOS AUTORIZADOS PARA ENTREGA
     // ======================================================
 
     sections.push(
       "",
       "**Autorização**",
-      buildApprovalRoles(
+      buildDeliveryPermissionRoles(
         guild,
-        medal.approvalRoles
+        medal.deliveryPermissionRoles
       )
     );
 
@@ -272,10 +268,6 @@ export async function createMedalCategoryCatalog(
   guild: Guild,
   categoryId: string
 ): Promise<string | null> {
-  // ========================================================
-  // BUSCA CONFIGURAÇÃO
-  // ========================================================
-
   const config = await prisma.guildConfig.findUnique({
     where: {
       requestGuildId: guild.id,
@@ -289,10 +281,6 @@ export async function createMedalCategoryCatalog(
 
     return null;
   }
-
-  // ========================================================
-  // BUSCA CANAL
-  // ========================================================
 
   const channel = guild.channels.cache.get(
     config.medalCatalogChannelId
@@ -314,10 +302,6 @@ export async function createMedalCategoryCatalog(
     return null;
   }
 
-  // ========================================================
-  // BUSCA CATEGORIA
-  // ========================================================
-
   const category = await prisma.medalCategory.findUnique({
     where: {
       id: categoryId,
@@ -328,32 +312,19 @@ export async function createMedalCategoryCatalog(
     return null;
   }
 
-  // ========================================================
-  // CONSTRÓI COMPONENTES
-  // ========================================================
-
-  const container =
-    await buildMedalCategoryComponents(
-      guild,
-      category.id
-    );
+  const container = await buildMedalCategoryComponents(
+    guild,
+    category.id
+  );
 
   if (!container) {
     return null;
   }
 
-  // ========================================================
-  // ENVIA MENSAGEM
-  // ========================================================
-
   const message = await channel.send({
     components: [container],
     flags: MessageFlags.IsComponentsV2,
   });
-
-  // ========================================================
-  // SALVA ID DA MENSAGEM
-  // ========================================================
 
   await prisma.medalCategory.update({
     where: {
@@ -379,10 +350,6 @@ export async function updateMedalCategoryCatalog(
   guild: Guild,
   categoryId: string
 ): Promise<boolean> {
-  // ========================================================
-  // BUSCA CONFIGURAÇÃO
-  // ========================================================
-
   const config = await prisma.guildConfig.findUnique({
     where: {
       requestGuildId: guild.id,
@@ -397,10 +364,6 @@ export async function updateMedalCategoryCatalog(
     return false;
   }
 
-  // ========================================================
-  // BUSCA CANAL
-  // ========================================================
-
   const channel = guild.channels.cache.get(
     config.medalCatalogChannelId
   );
@@ -413,10 +376,6 @@ export async function updateMedalCategoryCatalog(
     return false;
   }
 
-  // ========================================================
-  // BUSCA CATEGORIA
-  // ========================================================
-
   const category = await prisma.medalCategory.findUnique({
     where: {
       id: categoryId,
@@ -427,19 +386,10 @@ export async function updateMedalCategoryCatalog(
     return false;
   }
 
-  // ========================================================
-  // CATEGORIA SEM MEDALHAS
-  // ========================================================
-
-  const container =
-    await buildMedalCategoryComponents(
-      guild,
-      category.id
-    );
-
-  // ========================================================
-  // SE NÃO HÁ MEDALHAS
-  // ========================================================
+  const container = await buildMedalCategoryComponents(
+    guild,
+    category.id
+  );
 
   if (!container) {
     if (category.catalogMessageId) {
@@ -469,10 +419,6 @@ export async function updateMedalCategoryCatalog(
     return true;
   }
 
-  // ========================================================
-  // SE NÃO EXISTE MENSAGEM, CRIA
-  // ========================================================
-
   if (!category.catalogMessageId) {
     const message = await channel.send({
       components: [container],
@@ -495,10 +441,6 @@ export async function updateMedalCategoryCatalog(
     return true;
   }
 
-  // ========================================================
-  // ATUALIZA MENSAGEM EXISTENTE
-  // ========================================================
-
   try {
     const message = await channel.messages.fetch(
       category.catalogMessageId
@@ -519,10 +461,6 @@ export async function updateMedalCategoryCatalog(
       `⚠️ [CATALOG] Mensagem da categoria "${category.name}" não encontrada. Criando uma nova...`,
       error
     );
-
-    // ======================================================
-    // MENSAGEM NÃO EXISTE MAIS
-    // ======================================================
 
     try {
       const message = await channel.send({
@@ -562,10 +500,6 @@ export async function updateMedalCategoryCatalog(
 export async function syncMedalCatalog(
   guild: Guild
 ): Promise<boolean> {
-  // ========================================================
-  // BUSCA CONFIGURAÇÃO
-  // ========================================================
-
   const config = await prisma.guildConfig.findUnique({
     where: {
       requestGuildId: guild.id,
@@ -580,25 +514,16 @@ export async function syncMedalCatalog(
     return false;
   }
 
-  // ========================================================
-  // BUSCA TODAS AS CATEGORIAS
-  // ========================================================
-
-  const categories =
-    await prisma.medalCategory.findMany({
-      orderBy: [
-        {
-          position: "asc",
-        },
-        {
-          name: "asc",
-        },
-      ],
-    });
-
-  // ========================================================
-  // ATUALIZA / CRIA CADA CATEGORIA
-  // ========================================================
+  const categories = await prisma.medalCategory.findMany({
+    orderBy: [
+      {
+        position: "asc",
+      },
+      {
+        name: "asc",
+      },
+    ],
+  });
 
   for (const category of categories) {
     await updateMedalCategoryCatalog(
@@ -606,10 +531,6 @@ export async function syncMedalCatalog(
       category.id
     );
   }
-
-  // ========================================================
-  // REMOVE MENSAGENS DE CATEGORIAS DESATIVADAS
-  // ========================================================
 
   const channel = guild.channels.cache.get(
     config.medalCatalogChannelId
@@ -661,18 +582,10 @@ export async function syncMedalCatalog(
 //
 // A partir de agora, o catálogo é sincronizado por categoria.
 
-// ==========================================================
-// CRIA CATÁLOGO
-// ==========================================================
-
 export async function createMedalCatalog(
   guild: Guild,
   channelId: string
 ): Promise<string | null> {
-  // ========================================================
-  // GARANTE QUE O CANAL ESTÁ CONFIGURADO
-  // ========================================================
-
   await prisma.guildConfig.updateMany({
     where: {
       requestGuildId: guild.id,
@@ -682,44 +595,31 @@ export async function createMedalCatalog(
     },
   });
 
-  // ========================================================
-  // SINCRONIZA CATEGORIAS
-  // ========================================================
-
   const success = await syncMedalCatalog(guild);
 
   if (!success) {
     return null;
   }
 
-  // ========================================================
-  // RETORNA PRIMEIRA MENSAGEM
-  // ========================================================
-
-  const firstCategory =
-    await prisma.medalCategory.findFirst({
-      where: {
-        active: true,
-        catalogMessageId: {
-          not: null,
-        },
+  const firstCategory = await prisma.medalCategory.findFirst({
+    where: {
+      active: true,
+      catalogMessageId: {
+        not: null,
       },
-      orderBy: [
-        {
-          position: "asc",
-        },
-        {
-          name: "asc",
-        },
-      ],
-    });
+    },
+    orderBy: [
+      {
+        position: "asc",
+      },
+      {
+        name: "asc",
+      },
+    ],
+  });
 
   return firstCategory?.catalogMessageId ?? null;
 }
-
-// ==========================================================
-// ATUALIZA CATÁLOGO
-// ==========================================================
 
 export async function updateMedalCatalog(
   guild: Guild
