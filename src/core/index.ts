@@ -7,11 +7,7 @@ import { cleanupSolicitationNotice } from "../services/solicitation.service.js";
 
 client.once("clientReady", async (bot) => {
   console.log(`Atlas conectado como ${bot.user.tag}`);
-  for (const guild of bot.guilds.cache.values()) {
-    await cleanupSolicitationNotice(guild).catch((error) =>
-      console.error("❌ [SOLICITAÇÕES] Erro ao limpar aviso expirado:", error)
-    );
-  }
+  for (const guild of bot.guilds.cache.values()) await cleanupSolicitationNotice(guild).catch(() => undefined);
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -31,6 +27,8 @@ client.on("interactionCreate", async (interaction) => {
     installInteractionMessageStyle(interaction);
 
     if (interaction.isButton()) {
+      console.log("🔘 [INTERACTION] Botão recebido:", interaction.customId);
+
       if (interaction.customId.startsWith("ticket_") || interaction.customId.startsWith("solicitation_")) {
         const { handleTicketButton } = await import("../interactions/buttons/ticket.buttons.js");
         await handleTicketButton(interaction);
@@ -85,10 +83,18 @@ client.on("interactionCreate", async (interaction) => {
         return;
       }
 
+      if (interaction.customId.startsWith("ticket_medal_select:")) {
+        const { handleTicketMedalSelect } = await import("../interactions/selects/ticket.selects.js");
+        await handleTicketMedalSelect(interaction);
+        return;
+      }
+
       return;
     }
 
     if (interaction.isModalSubmit()) {
+      console.log("📝 [INTERACTION] Modal recebido:", interaction.customId);
+
       if (interaction.customId.startsWith("solicitation_proofs_modal:")) {
         const { handleSolicitationProofModal } = await import("../interactions/buttons/ticket.buttons.js");
         await handleSolicitationProofModal(interaction);
@@ -98,6 +104,18 @@ client.on("interactionCreate", async (interaction) => {
       if (interaction.customId.startsWith("solicitation_deny_modal:")) {
         const { handleDenialModal } = await import("../interactions/buttons/ticket.buttons.js");
         await handleDenialModal(interaction);
+        return;
+      }
+
+      if (interaction.customId.startsWith("ticket_medal_deny_modal:")) {
+        const { handleTicketMedalDenyModal } = await import("../interactions/modals/ticket.modals.js");
+        await handleTicketMedalDenyModal(interaction);
+        return;
+      }
+
+      if (interaction.customId.startsWith("ticket_roblox_modal:")) {
+        const { handleTicketRobloxModal } = await import("../interactions/modals/ticket.modals.js");
+        await handleTicketRobloxModal(interaction);
         return;
       }
 
@@ -132,19 +150,17 @@ client.on("interactionCreate", async (interaction) => {
     if (!interaction.isRepliable()) return;
 
     try {
-      const content = [
+      const errorMessage = [
         "## ❌ Algo deu errado",
         "",
         "O Atlas não conseguiu concluir esta ação.",
         "",
         "-# Tente novamente em alguns instantes.",
+        "-# Se o problema persistir, informe um administrador.",
       ].join("\n");
 
-      if (interaction.replied || interaction.deferred) {
-        await interaction.followUp({ content, flags: 64 });
-      } else {
-        await interaction.reply({ content, flags: 64 });
-      }
+      if (interaction.replied || interaction.deferred) await interaction.followUp({ content: errorMessage, flags: 64 });
+      else await interaction.reply({ content: errorMessage, flags: 64 });
     } catch (replyError) {
       console.error("❌ [INTERACTION] Não foi possível enviar a mensagem de erro:", replyError);
     }
