@@ -190,7 +190,6 @@ export async function handleSolicitationProofModal(interaction: import("discord.
   }
 
   await interaction.reply({
-    content: "## 📋 Todas as provas foram registradas\n\nRevise sua solicitação antes de enviá-la para a equipe.",
     ...(await buildDraftReview(ticketId)),
     flags: MessageFlags.Ephemeral,
   });
@@ -264,7 +263,7 @@ export async function handleDenialModal(interaction: import("discord.js").ModalS
   const member = await interaction.guild.members.fetch(interaction.user.id);
   if (!member.roles.cache.has(config.staffRoleId)) throw new Error("Apenas a equipe pode negar medalhas.");
 
-  const item = await prisma.ticketMedal.findUnique({ where: { id: ticketMedalId }, include: { medal: true, ticket: true } });
+  const item = await prisma.ticketMedal.findUnique({ where: { id: ticketMedalId }, include: { medal: { include: { approvalRoles: true } }, ticket: true } });
   if (!item || item.status !== "PENDING") throw new Error("Esta medalha já foi analisada.");
   if (!item.medal.approvalRoles.some((role) => member.roles.cache.has(role.roleId))) throw new Error("Você não possui permissão específica para negar esta medalha.");
 
