@@ -12,7 +12,6 @@ import { prisma } from "../../infrastructure/database/prisma.js";
 import {
   buildDraftReview,
   buildProofModal,
-  buildSolicitationPanel,
   createDraftSolicitation,
   getProofProgress,
   refreshTeamMessage,
@@ -36,22 +35,12 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
     const [, ticketId, ticketMedalId] = interaction.customId.split(":");
     if (!ticketId || !ticketMedalId) throw new Error("Solicitação de provas inválida.");
 
-    const item = await prisma.ticketMedal.findUnique({
-      where: { id: ticketMedalId },
-      include: { medal: true, ticket: true },
-    });
-    if (!item || item.ticketId !== ticketId || item.ticket.userId !== interaction.user.id) {
+    const item = await prisma.ticketMedal.findUnique({ where: { id: ticketMedalId }, include: { medal: true, ticket: true } });
+    if (!item || item.ticketId !== ticketId || item.ticket.userId !== interaction.user.id || item.ticket.submittedAt) {
       throw new Error("Você não pode alterar esta solicitação.");
     }
 
     await interaction.showModal(buildProofModal(ticketId, ticketMedalId, item.medal.name));
-    return;
-  }
-
-  if (interaction.customId.startsWith("solicitation_review:")) {
-    const ticketId = interaction.customId.split(":")[1];
-    if (!ticketId) throw new Error("Solicitação inválida.");
-    await interaction.reply({ ...(await buildDraftReview(ticketId)), flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -92,17 +81,13 @@ export async function handleTicketButton(interaction: ButtonInteraction): Promis
 
   if (interaction.customId.startsWith("ticket_medal_deliver:")) {
     await handleDeliver(interaction, interaction.customId.split(":")[1]);
-    return;
   }
 }
 
 async function handleSolicitationStart(interaction: ButtonInteraction) {
   const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: interaction.guild!.id } });
   if (!config?.solicitationsOpen) {
-    await interaction.reply({
-      content: "## 🔒 Solicitações encerradas\n\nO período de envio está temporariamente fechado. As solicitações já enviadas continuam em análise normalmente.",
-      flags: MessageFlags.Ephemeral,
-    });
+    await interaction.reply({ content: "## 🔒 Solicitações encerradas\n\nO período de envio está temporariamente fechado. As solicitações já enviadas continuam em análise normalmente.", flags: MessageFlags.Ephemeral });
     return;
   }
 
@@ -156,7 +141,6 @@ export async function handleSolicitationMedalSelect(interaction: import("discord
   const medalIds = [...new Set(interaction.values)];
   const ticket = await createDraftSolicitation(interaction as unknown as ButtonInteraction, medalIds);
   const medals = await getProofProgress(ticket.id);
-
   const first = medals.find((item) => item.proofs.length === 0);
   if (!first) throw new Error("Não foi possível preparar a primeira etapa de provas.");
 
@@ -171,12 +155,10 @@ export async function handleSolicitationMedalSelect(interaction: import("discord
       "",
       "Depois de concluir uma medalha, o Atlas liberará a próxima.",
     ].join("\n"),
-    components: [
-      new ActionRowBuilder<ButtonBuilder>().addComponents(
-        new ButtonBuilder().setCustomId(`solicitation_proofs:${ticket.id}:${first.id}`).setLabel("Anexar provas").setEmoji("📎").setStyle(ButtonStyle.Primary),
-        new ButtonBuilder().setCustomId(`solicitation_cancel:${ticket.id}`).setLabel("Cancelar").setEmoji("🗑️").setStyle(ButtonStyle.Danger),
-      ),
-    ],
+    components: [new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(`solicitation_proofs:${ticket.id}:${first.id}`).setLabel("Anexar provas").setEmoji("📎").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId(`solicitation_cancel:${ticket.id}`).setLabel("Cancelar").setEmoji("🗑️").setStyle(ButtonStyle.Danger),
+    )],
   });
 }
 
@@ -194,7 +176,7 @@ export async function handleSolicitationProofModal(interaction: import("discord.
       content: [
         "## 📎 Provas registradas",
         "",
-        `As provas de **${medals.find((m) => m.id === parts[2])?.medal.name ?? "esta medalha"}** foram registradas.`,
+        "As provas desta etapa foram registradas com sucesso.",
         "",
         `Agora envie as provas de **${next.medal.name}**.`,
       ].join("\n"),
@@ -219,36 +201,28 @@ async function requireStaff(interaction: ButtonInteraction) {
   if (!config) throw new Error("Configuração do Atlas não encontrada.");
   const member = await interaction.guild!.members.fetch(interaction.user.id);
   if (!member.roles.cache.has(config.staffRoleId)) throw new Error("Apenas membros da equipe podem analisar solicitações.");
-  return config;
+  return { config, member };
 }
 
 async function handleApprove(interaction: ButtonInteraction, ticketMedalId?: string) {
   if (!ticketMedalId) throw new Error("Medalha inválida.");
-  const config = await requireStaff(interaction);
+  const { member } = await requireStaff(interaction);
   const item = await prisma.ticketMedal.findUnique({ where: { id: ticketMedalId }, include: { medal: { include: { approvalRoles: true } }, ticket: true } });
   if (!item) throw new Error("Medalha não encontrada.");
   if (item.status !== "PENDING") throw new Error("Esta medalha já foi analisada.");
-  if (!item.medal.approvalRoles.some((role) => interaction.member?.roles && "cache" in interaction.member.roles && interaction.member.roles.cache.has(role.roleId))) {
-    throw new Error("Você não possui permissão específica para aprovar esta medalha.");
-  }
+  if (!item.medal.approvalRoles.some((role) => member.roles.cache.has(role.roleId))) throw new Error("Você não possui permissão específica para aprovar esta medalha.");
 
-  const approved = await prisma.ticketMedal.update({
-    where: { id: item.id },
-    data: { status: "APPROVED", decidedBy: interaction.user.id, reason: null },
-    include: { medal: true, ticket: true },
-  });
-
+  const approved = await prisma.ticketMedal.update({ where: { id: item.id }, data: { status: "APPROVED", decidedBy: interaction.user.id, reason: null }, include: { medal: true, ticket: true } });
   await prisma.ticket.update({ where: { id: approved.ticketId }, data: { staffId: interaction.user.id } });
-  await prisma.auditLog.create({
-    data: {
-      action: "MEDAL_APPROVED",
-      executorId: interaction.user.id,
-      targetId: approved.ticket.userId,
-      ticketId: approved.ticketId,
-      medalId: approved.medalId,
-      details: { solicitation: true, ticketMedalId: approved.id, medalName: approved.medal.name },
-    },
-  });
+
+  await prisma.auditLog.create({ data: {
+    action: "MEDAL_APPROVED",
+    executorId: interaction.user.id,
+    targetId: approved.ticket.userId,
+    ticketId: approved.ticketId,
+    medalId: approved.medalId,
+    details: { solicitation: true, ticketMedalId: approved.id, medalName: approved.medal.name },
+  }});
 
   try {
     const user = await interaction.client.users.fetch(approved.ticket.userId);
@@ -290,11 +264,13 @@ export async function handleDenialModal(interaction: import("discord.js").ModalS
   const member = await interaction.guild.members.fetch(interaction.user.id);
   if (!member.roles.cache.has(config.staffRoleId)) throw new Error("Apenas a equipe pode negar medalhas.");
 
-  const reason = interaction.fields.getTextInputValue("deny_reason").trim();
   const item = await prisma.ticketMedal.findUnique({ where: { id: ticketMedalId }, include: { medal: true, ticket: true } });
   if (!item || item.status !== "PENDING") throw new Error("Esta medalha já foi analisada.");
+  if (!item.medal.approvalRoles.some((role) => member.roles.cache.has(role.roleId))) throw new Error("Você não possui permissão específica para negar esta medalha.");
 
+  const reason = interaction.fields.getTextInputValue("deny_reason").trim();
   const denied = await prisma.ticketMedal.update({ where: { id: item.id }, data: { status: "DENIED", decidedBy: interaction.user.id, reason }, include: { medal: true, ticket: true } });
+
   await prisma.auditLog.create({ data: {
     action: "MEDAL_DENIED",
     executorId: interaction.user.id,
@@ -318,15 +294,10 @@ async function handleDeliver(interaction: ButtonInteraction, ticketMedalId?: str
   const item = await prisma.ticketMedal.findUnique({ where: { id: ticketMedalId }, include: { medal: true, ticket: true } });
   if (!item || item.status !== "APPROVED") throw new Error("Somente medalhas aprovadas podem ser entregues.");
 
-  const result = await import("../../services/medal-delivery.service.js").then(({ deliverMedal }) => deliverMedal({
-    client: interaction.client,
-    ticketMedalId,
-    executorId: interaction.user.id,
-    requestGuildId: interaction.guild!.id,
-  }));
+  const { deliverMedal } = await import("../../services/medal-delivery.service.js");
+  const result = await deliverMedal({ client: interaction.client, ticketMedalId, executorId: interaction.user.id, requestGuildId: interaction.guild!.id });
 
   await refreshTeamMessage(interaction.guild!, item.ticketId);
-
   try {
     const user = await interaction.client.users.fetch(item.ticket.userId);
     await user.send(`## 🏅 Medalha entregue\n\nA medalha **${item.medal.name}** foi efetivamente entregue no servidor do EB.`);
