@@ -15,7 +15,6 @@ import {
   TextDisplayBuilder,
   StringSelectMenuInteraction,
 } from "discord.js";
-
 import { prisma } from "../infrastructure/database/prisma.js";
 import { logAuditEvent } from "./audit-log.service.js";
 
@@ -56,28 +55,11 @@ export async function buildSolicitationPanel(guild: Guild) {
   const button = new ButtonBuilder().setCustomId("ticket_request_medals").setLabel(open ? "Solicitar medalhas" : "Solicitações encerradas").setEmoji(open ? "🎖️" : "🔒").setStyle(open ? ButtonStyle.Primary : ButtonStyle.Secondary).setDisabled(!open);
   return [
     new TextDisplayBuilder().setContent([
-      "# 🎖️ SOLICITAÇÕES DE MEDALHAS",
-      "",
+      "# 🎖️ SOLICITAÇÕES DE MEDALHAS", "",
       open ? "O período de solicitações está **aberto**. Inicie uma nova solicitação pelo botão abaixo." : "O período de solicitações está **encerrado**. Solicitações já enviadas continuam em análise normalmente.",
-      "",
-      "## 📋 Como funciona",
-      "",
-      "**1.** Escolha de 1 a 3 medalhas.",
-      "**2.** Envie as provas da primeira medalha.",
-      "**3.** Envie as provas de cada medalha separadamente.",
-      "**4.** Revise tudo e confirme o envio.",
-      "**5.** A equipe analisará cada medalha individualmente.",
-      "**6.** Você receberá atualizações no privado sobre aprovação, negativa e entrega.",
-      "",
-      "## 📎 Suas obrigações",
-      "",
-      "• As provas devem corresponder à medalha escolhida;",
-      "• Não misture provas de medalhas diferentes;",
-      "• Envie arquivos legíveis e suficientes para análise;",
-      "• O envio não garante aprovação;",
-      "• Provas insuficientes podem resultar em negativa.",
-      "",
-      "-# O Atlas registra cada etapa da solicitação para controle e auditoria.",
+      "", "## 📋 Como funciona", "", "**1.** Escolha de 1 a 3 medalhas.", "**2.** Envie as provas da primeira medalha.", "**3.** Envie as provas de cada medalha separadamente.", "**4.** Revise tudo e confirme o envio.", "**5.** A equipe analisará cada medalha individualmente.", "**6.** Você receberá atualizações no privado sobre aprovação, negativa e entrega.",
+      "", "## 📎 Suas obrigações", "", "• As provas devem corresponder à medalha escolhida;", "• Não misture provas de medalhas diferentes;", "• Envie arquivos legíveis e suficientes para análise;", "• O envio não garante aprovação;", "• Provas insuficientes podem resultar em negativa.",
+      "", "-# O Atlas registra cada etapa da solicitação para controle e auditoria.",
     ].join("\n")),
     new ActionRowBuilder<ButtonBuilder>().addComponents(button),
   ];
@@ -111,10 +93,7 @@ export async function cleanupSolicitationNotice(guild: Guild) {
   const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: guild.id } });
   if (!config?.solicitationNoticeMessageId || !config.solicitationNoticeDeleteAt || config.solicitationNoticeDeleteAt.getTime() > Date.now()) return;
   if (config.ticketPanelChannelId) {
-    try {
-      const channel = await guild.channels.fetch(config.ticketPanelChannelId);
-      if (channel?.isTextBased()) await (await channel.messages.fetch(config.solicitationNoticeMessageId)).delete();
-    } catch {}
+    try { const channel = await guild.channels.fetch(config.ticketPanelChannelId); if (channel?.isTextBased()) await (await channel.messages.fetch(config.solicitationNoticeMessageId)).delete(); } catch {}
   }
   await prisma.guildConfig.update({ where: { requestGuildId: guild.id }, data: { solicitationNoticeMessageId: null, solicitationNoticeDeleteAt: null } });
 }
@@ -138,10 +117,7 @@ export async function createDraftSolicitation(interaction: ButtonInteraction, me
   const member = await interaction.guild.members.fetch(interaction.user.id);
   const medals = await prisma.medal.findMany({ where: { id: { in: medalIds }, active: true }, include: { category: true } });
   if (medals.length !== medalIds.length) throw new Error("Uma ou mais medalhas não estão mais disponíveis.");
-  const ticket = await prisma.ticket.create({
-    data: { channelId: getTeamChannelId(config), userId: interaction.user.id, username: interaction.user.username, nickname: member.displayName, robloxUsername: "N/A", status: "OPEN", medals: { create: medalIds.map((medalId) => ({ medalId, status: "PENDING" })) } },
-    include: { medals: { include: { medal: { include: { category: true } } } } },
-  });
+  const ticket = await prisma.ticket.create({ data: { channelId: getTeamChannelId(config), userId: interaction.user.id, username: interaction.user.username, nickname: member.displayName, robloxUsername: "N/A", status: "OPEN", medals: { create: medalIds.map((medalId) => ({ medalId, status: "PENDING" })) } }, include: { medals: { include: { medal: { include: { category: true } } } } } });
   await logAuditEvent({ guild: interaction.guild, action: "TICKET_CREATED", executorId: interaction.user.id, targetId: interaction.user.id, ticketId: ticket.id, details: { solicitation: true, draft: true, ticketNumber: ticket.ticketNumber, medalIds } });
   return ticket;
 }
@@ -170,10 +146,12 @@ export async function buildDraftReview(ticketId: string) {
   if (medals.some((item) => item.proofs.length === 0)) throw new Error("Todas as medalhas precisam ter pelo menos uma prova.");
   const ticket = await prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } });
   return {
-    components: [
-      new TextDisplayBuilder().setContent(["# 📋 Revisão da solicitação", "", `**Solicitação:** #${ticket.ticketNumber}`, `**Solicitante:** <@${ticket.userId}>`, "", "## 🏅 Medalhas", "", medals.map((item) => `${item.medal.emoji ?? "🏅"} **${item.medal.name}** — ${item.proofs.length} prova(s) — ${item.medal.category?.name ?? "Sem categoria"}`).join("\n"), "", "Revise cuidadosamente as medalhas e as provas antes de enviar.", "", "-# Depois do envio, a solicitação será encaminhada para a equipe e não poderá ser alterada."].join("\n")),
-      new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`solicitation_submit:${ticket.id}`).setLabel("Enviar solicitação").setEmoji("📨").setStyle(ButtonStyle.Success)),
-    ],
+    content: [
+      "# 📋 Revisão da solicitação", "", `**Solicitação:** #${ticket.ticketNumber}`, `**Solicitante:** <@${ticket.userId}>`, "", "## 🏅 Medalhas", "",
+      medals.map((item) => `${item.medal.emoji ?? "🏅"} **${item.medal.name}** — ${item.proofs.length} prova(s) — ${item.medal.category?.name ?? "Sem categoria"}`).join("\n"),
+      "", "Revise cuidadosamente as medalhas e as provas antes de enviar.", "", "-# Depois do envio, a solicitação será encaminhada para a equipe e não poderá ser alterada.",
+    ].join("\n"),
+    components: [new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`solicitation_submit:${ticket.id}`).setLabel("Enviar solicitação").setEmoji("📨").setStyle(ButtonStyle.Success))],
   };
 }
 
@@ -191,32 +169,15 @@ export async function buildTeamMessage(ticketId: string) {
     return `${item.medal.emoji ?? "🏅"} **${item.medal.name}** — ${status}\n-# ${item.medal.category?.name ?? "Sem categoria"} • ${item.proofs.length} prova(s)`;
   }).join("\n\n");
   const components: Array<TextDisplayBuilder | ActionRowBuilder<ButtonBuilder>> = [
-    new TextDisplayBuilder().setContent([
-      `# 📋 SOLICITAÇÃO #${ticket.ticketNumber}`,
-      "",
-      `👤 **Solicitante:** <@${ticket.userId}> | **${ticket.nickname ?? ticket.username}**`,
-      `🕒 **Enviada:** ${ticket.submittedAt ? `<t:${Math.floor(ticket.submittedAt.getTime() / 1000)}:F>` : "Aguardando envio"}`,
-      "",
-      "## 📊 Resumo",
-      "",
-      `🟡 Em análise: **${pending}**`,
-      `🟠 Aprovadas: **${approved}**`,
-      `🟢 Entregues: **${granted}**`,
-      `🔴 Negadas: **${denied}**`,
-      "",
-      "## 🏅 Medalhas",
-      "",
-      medalSummary,
-      "",
-      "-# As provas estão organizadas individualmente por medalha. Use o botão abaixo para visualizá-las.",
-    ].join("\n")),
+    new TextDisplayBuilder().setContent([`# 📋 SOLICITAÇÃO #${ticket.ticketNumber}`, "", `👤 **Solicitante:** <@${ticket.userId}> | **${ticket.nickname ?? ticket.username}**`, `🕒 **Enviada:** ${ticket.submittedAt ? `<t:${Math.floor(ticket.submittedAt.getTime() / 1000)}:F>` : "Aguardando envio"}`, "", "## 📊 Resumo", "", `🟡 Em análise: **${pending}**`, `🟠 Aprovadas: **${approved}**`, `🟢 Entregues: **${granted}**`, `🔴 Negadas: **${denied}**`, "", "## 🏅 Medalhas", "", medalSummary, "", "-# As provas estão organizadas individualmente por medalha. Use o botão abaixo para visualizá-las."].join("\n")),
     new ActionRowBuilder<ButtonBuilder>().addComponents(new ButtonBuilder().setCustomId(`solicitation_view_proofs:${ticket.id}`).setLabel("Visualizar provas").setEmoji("📎").setStyle(ButtonStyle.Secondary)),
   ];
   for (const item of ticket.medals) {
-    const approve = new ButtonBuilder().setCustomId(`ticket_medal_approve:${item.id}`).setLabel(`Aprovar ${item.medal.name}`.slice(0, 80)).setEmoji("✅").setStyle(ButtonStyle.Success).setDisabled(item.status !== "PENDING");
-    const deny = new ButtonBuilder().setCustomId(`ticket_medal_deny:${item.id}`).setLabel(`Negar ${item.medal.name}`.slice(0, 80)).setEmoji("❌").setStyle(ButtonStyle.Danger).setDisabled(item.status !== "PENDING");
-    const deliver = new ButtonBuilder().setCustomId(`ticket_medal_deliver:${item.id}`).setLabel(`Entregar ${item.medal.name}`.slice(0, 80)).setEmoji("🏅").setStyle(ButtonStyle.Primary).setDisabled(item.status !== "APPROVED");
-    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(approve, deny, deliver));
+    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(`ticket_medal_approve:${item.id}`).setLabel(`Aprovar ${item.medal.name}`.slice(0, 80)).setEmoji("✅").setStyle(ButtonStyle.Success).setDisabled(item.status !== "PENDING"),
+      new ButtonBuilder().setCustomId(`ticket_medal_deny:${item.id}`).setLabel(`Negar ${item.medal.name}`.slice(0, 80)).setEmoji("❌").setStyle(ButtonStyle.Danger).setDisabled(item.status !== "PENDING"),
+      new ButtonBuilder().setCustomId(`ticket_medal_deliver:${item.id}`).setLabel(`Entregar ${item.medal.name}`.slice(0, 80)).setEmoji("🏅").setStyle(ButtonStyle.Primary).setDisabled(item.status !== "APPROVED"),
+    ));
   }
   return components;
 }
@@ -242,9 +203,7 @@ export async function submitSolicitation(interaction: ButtonInteraction, ticketI
   const message = await channel.send({ components: await buildTeamMessage(ticket.id), flags: MessageFlags.IsComponentsV2 });
   await prisma.ticket.update({ where: { id: ticket.id }, data: { submittedAt: new Date(), teamMessageId: message.id } });
   await refreshTeamMessage(interaction.guild, ticket.id);
-  try {
-    await interaction.user.send(["## 📨 Solicitação recebida", "", `Sua solicitação **#${ticket.ticketNumber}** foi enviada para a equipe.`, "", `🏅 **${ticket.medals.length} medalha(s)** aguardando análise.`, "", "Aguarde. Você receberá novas mensagens quando houver decisões e quando as medalhas forem efetivamente entregues."].join("\n"));
-  } catch {}
+  try { await interaction.user.send(["## 📨 Solicitação recebida", "", `Sua solicitação **#${ticket.ticketNumber}** foi enviada para a equipe.`, "", `🏅 **${ticket.medals.length} medalha(s)** aguardando análise.`, "", "Aguarde. Você receberá novas mensagens quando houver decisões e quando as medalhas forem efetivamente entregues."].join("\n")); } catch {}
   await logAuditEvent({ guild: interaction.guild, action: "TICKET_CREATED", executorId: interaction.user.id, targetId: interaction.user.id, ticketId: ticket.id, details: { solicitation: true, submitted: true, ticketNumber: ticket.ticketNumber, teamChannelId: channel.id, teamMessageId: message.id } });
   return message;
 }
