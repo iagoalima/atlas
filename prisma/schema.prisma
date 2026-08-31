@@ -23,10 +23,10 @@ model GuildConfig {
   ticketPanelChannelId String?
   ticketPanelMessageId String?
 
-  solicitationChannelId          String?
-  solicitationsOpen              Boolean  @default(false)
-  solicitationNoticeMessageId    String?
-  solicitationNoticeDeleteAt     DateTime?
+  solicitationChannelId       String?
+  solicitationsOpen           Boolean  @default(false)
+  solicitationNoticeMessageId String?
+  solicitationNoticeDeleteAt  DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -118,10 +118,12 @@ model Ticket {
   username          String
   nickname          String?
   robloxUsername    String
-  status            TicketStatus @default(DRAFT)
+  status            TicketStatus @default(OPEN)
   staffId           String?
   reason            String?
   proofsSubmittedAt DateTime?
+  submittedAt       DateTime?
+  teamMessageId     String?
   createdAt         DateTime     @default(now())
   closedAt          DateTime?
 
@@ -134,20 +136,21 @@ model Ticket {
   @@index([channelId])
   @@index([userId])
   @@index([status])
+  @@index([submittedAt])
   @@map("tickets")
 }
 
 model TicketProof {
-  id           String   @id @default(cuid())
-  ticketId     String
+  id            String   @id @default(cuid())
+  ticketId      String
   ticketMedalId String?
-  medalId      String?
-  userId       String
-  messageId    String
-  channelId    String
-  url          String
-  fileName     String?
-  createdAt    DateTime @default(now())
+  medalId       String?
+  userId        String
+  messageId     String
+  channelId     String
+  url           String
+  fileName      String?
+  createdAt     DateTime @default(now())
 
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   ticketMedal TicketMedal? @relation(fields: [ticketMedalId], references: [id], onDelete: Cascade)
@@ -223,7 +226,6 @@ model AuditLog {
 }
 
 enum TicketStatus {
-  DRAFT
   OPEN
   APPROVED
   DENIED
