@@ -10,64 +10,46 @@ import {
   MessageFlags,
   ModalBuilder,
   ModalSubmitInteraction,
-  PermissionFlagsBits,
   StringSelectMenuBuilder,
   StringSelectMenuOptionBuilder,
   TextDisplayBuilder,
+  StringSelectMenuInteraction,
 } from "discord.js";
 
 import { prisma } from "../infrastructure/database/prisma.js";
-import { deliverMedal } from "./medal-delivery.service.js";
 import { logAuditEvent } from "./audit-log.service.js";
 
 const NOTICE_TTL_MS = 3 * 60 * 60 * 1000;
 
-function getTeamChannelId(config: { solicitationChannelId: string | null; transcriptChannelId: string }) {
+type TeamConfig = { solicitationChannelId: string | null; transcriptChannelId: string };
+
+function getTeamChannelId(config: TeamConfig) {
   return config.solicitationChannelId ?? config.transcriptChannelId;
 }
 
 async function getTeamChannel(guild: Guild) {
-  const config = await prisma.guildConfig.findUnique({
-    where: { requestGuildId: guild.id },
-  });
-
+  const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: guild.id } });
   if (!config) throw new Error("Configuração do Atlas não encontrada.");
 
-  const channelId = getTeamChannelId(config);
-  const channel = await guild.channels.fetch(channelId);
-
+  const channel = await guild.channels.fetch(getTeamChannelId(config));
   if (!channel || channel.type !== ChannelType.GuildText) {
     throw new Error("O canal privado de solicitações não foi encontrado ou não é um canal de texto.");
   }
 
-  await channel.permissionOverwrites.edit(guild.roles.everyone, {
-    ViewChannel: false,
+  const botId = guild.client.user!.id;
+  await channel.permissionOverwrites.edit(guild.roles.everyone, { ViewChannel: false });
+  await channel.permissionOverwrites.edit(botId, {
+    ViewChannel: true, SendMessages: true, ReadMessageHistory: true,
+    AttachFiles: true, EmbedLinks: true, ManageMessages: true,
   });
-
-  await channel.permissionOverwrites.edit(guild.client.user.id, {
-    ViewChannel: true,
-    SendMessages: true,
-    ReadMessageHistory: true,
-    AttachFiles: true,
-    EmbedLinks: true,
-    ManageMessages: true,
-  });
-
   await channel.permissionOverwrites.edit(config.staffRoleId, {
-    ViewChannel: true,
-    SendMessages: true,
-    ReadMessageHistory: true,
-    AttachFiles: true,
-    EmbedLinks: true,
+    ViewChannel: true, SendMessages: true, ReadMessageHistory: true,
+    AttachFiles: true, EmbedLinks: true,
   });
-
   if (config.responsibleRoleId) {
     await channel.permissionOverwrites.edit(config.responsibleRoleId, {
-      ViewChannel: true,
-      SendMessages: true,
-      ReadMessageHistory: true,
-      AttachFiles: true,
-      EmbedLinks: true,
+      ViewChannel: true, SendMessages: true, ReadMessageHistory: true,
+      AttachFiles: true, EmbedLinks: true,
     });
   }
 
@@ -75,9 +57,7 @@ async function getTeamChannel(guild: Guild) {
 }
 
 export async function ensureSolicitationChannel(guild: Guild, channelId: string) {
-  const config = await prisma.guildConfig.findUnique({
-    where: { requestGuildId: guild.id },
-  });
+  const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: guild.id } });
   if (!config) throw new Error("Configuração do Atlas não encontrada.");
 
   const channel = await guild.channels.fetch(channelId);
@@ -90,31 +70,20 @@ export async function ensureSolicitationChannel(guild: Guild, channelId: string)
     data: { solicitationChannelId: channel.id },
   });
 
-  await channel.permissionOverwrites.edit(guild.roles.everyone, {
-    ViewChannel: false,
-  });
-  await channel.permissionOverwrites.edit(guild.client.user.id, {
-    ViewChannel: true,
-    SendMessages: true,
-    ReadMessageHistory: true,
-    AttachFiles: true,
-    EmbedLinks: true,
-    ManageMessages: true,
+  const botId = guild.client.user!.id;
+  await channel.permissionOverwrites.edit(guild.roles.everyone, { ViewChannel: false });
+  await channel.permissionOverwrites.edit(botId, {
+    ViewChannel: true, SendMessages: true, ReadMessageHistory: true,
+    AttachFiles: true, EmbedLinks: true, ManageMessages: true,
   });
   await channel.permissionOverwrites.edit(config.staffRoleId, {
-    ViewChannel: true,
-    SendMessages: true,
-    ReadMessageHistory: true,
-    AttachFiles: true,
-    EmbedLinks: true,
+    ViewChannel: true, SendMessages: true, ReadMessageHistory: true,
+    AttachFiles: true, EmbedLinks: true,
   });
   if (config.responsibleRoleId) {
     await channel.permissionOverwrites.edit(config.responsibleRoleId, {
-      ViewChannel: true,
-      SendMessages: true,
-      ReadMessageHistory: true,
-      AttachFiles: true,
-      EmbedLinks: true,
+      ViewChannel: true, SendMessages: true, ReadMessageHistory: true,
+      AttachFiles: true, EmbedLinks: true,
     });
   }
 
@@ -122,10 +91,7 @@ export async function ensureSolicitationChannel(guild: Guild, channelId: string)
 }
 
 export async function buildSolicitationPanel(guild: Guild) {
-  const config = await prisma.guildConfig.findUnique({
-    where: { requestGuildId: guild.id },
-  });
-
+  const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: guild.id } });
   const open = config?.solicitationsOpen ?? false;
 
   const button = new ButtonBuilder()
@@ -140,8 +106,8 @@ export async function buildSolicitationPanel(guild: Guild) {
       "# 🎖️ SOLICITAÇÕES DE MEDALHAS",
       "",
       open
-        ? "O período de solicitações está **aberto**. Você pode iniciar uma nova solicitação pelo botão abaixo."
-        : "O período de solicitações está **encerrado** no momento. As solicitações já enviadas continuam sendo analisadas normalmente.",
+        ? "O período de solicitações está **aberto**. Inicie uma nova solicitação pelo botão abaixo."
+        : "O período de solicitações está **encerrado**. Solicitações já enviadas continuam em análise normalmente.",
       "",
       "## 📋 Como funciona",
       "",
@@ -157,73 +123,57 @@ export async function buildSolicitationPanel(guild: Guild) {
       "• As provas devem corresponder à medalha escolhida;",
       "• Não misture provas de medalhas diferentes;",
       "• Envie arquivos legíveis e suficientes para análise;",
-      "• A solicitação não garante aprovação;",
-      "• Informações ou provas insuficientes podem resultar em negativa.",
+      "• O envio não garante aprovação;",
+      "• Provas insuficientes podem resultar em negativa.",
       "",
-      "-# O Atlas registra cada etapa da solicitação para fins de controle e auditoria.",
+      "-# O Atlas registra cada etapa da solicitação para controle e auditoria.",
     ].join("\n")),
     new ActionRowBuilder<ButtonBuilder>().addComponents(button),
   ];
 }
 
 export async function openSolicitations(guild: Guild) {
-  const config = await prisma.guildConfig.findUnique({
-    where: { requestGuildId: guild.id },
-  });
+  const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: guild.id } });
   if (!config) throw new Error("Configuração do Atlas não encontrada.");
 
-  const updated = await prisma.guildConfig.update({
+  await prisma.guildConfig.update({
     where: { requestGuildId: guild.id },
     data: { solicitationsOpen: true },
   });
 
-  const channel = config.ticketPanelChannelId
-    ? await guild.channels.fetch(config.ticketPanelChannelId)
-    : null;
-
-  if (channel?.isTextBased()) {
-    const message = await channel.send({
-      content: "## 🟢 SOLICITAÇÕES REABERTAS\n\nO período para envio de novas solicitações de medalhas foi retomado.\n\nAs solicitações anteriores continuam em análise normalmente.",
-    });
-
-    const deleteAt = new Date(Date.now() + NOTICE_TTL_MS);
-    await prisma.guildConfig.update({
-      where: { requestGuildId: guild.id },
-      data: {
-        solicitationNoticeMessageId: message.id,
-        solicitationNoticeDeleteAt: deleteAt,
-      },
-    });
-
-    setTimeout(async () => {
-      try {
-        await message.delete();
-        await prisma.guildConfig.update({
-          where: { requestGuildId: guild.id },
-          data: {
-            solicitationNoticeMessageId: null,
-            solicitationNoticeDeleteAt: null,
-          },
-        });
-      } catch {}
-    }, NOTICE_TTL_MS);
+  if (config.ticketPanelChannelId) {
+    const channel = await guild.channels.fetch(config.ticketPanelChannelId);
+    if (channel?.isTextBased()) {
+      const message = await channel.send({
+        content: "## 🟢 SOLICITAÇÕES REABERTAS\n\nO período para envio de novas solicitações de medalhas foi retomado.\n\nAs solicitações anteriores continuam em análise normalmente.",
+      });
+      const deleteAt = new Date(Date.now() + NOTICE_TTL_MS);
+      await prisma.guildConfig.update({
+        where: { requestGuildId: guild.id },
+        data: { solicitationNoticeMessageId: message.id, solicitationNoticeDeleteAt: deleteAt },
+      });
+      setTimeout(async () => {
+        try { await message.delete(); } catch {}
+        try {
+          await prisma.guildConfig.update({
+            where: { requestGuildId: guild.id },
+            data: { solicitationNoticeMessageId: null, solicitationNoticeDeleteAt: null },
+          });
+        } catch {}
+      }, NOTICE_TTL_MS);
+    }
   }
 
   await logAuditEvent({
     guild,
     action: "CONFIG_UPDATED",
-    executorId: guild.client.user.id,
-    details: {
-      event: "SOLICITATIONS_OPENED",
-      open: true,
-    },
+    executorId: guild.client.user!.id,
+    details: { event: "SOLICITATIONS_OPENED", open: true },
   });
-
-  return updated;
 }
 
 export async function closeSolicitations(guild: Guild) {
-  const updated = await prisma.guildConfig.update({
+  await prisma.guildConfig.update({
     where: { requestGuildId: guild.id },
     data: { solicitationsOpen: false },
   });
@@ -231,21 +181,13 @@ export async function closeSolicitations(guild: Guild) {
   await logAuditEvent({
     guild,
     action: "CONFIG_UPDATED",
-    executorId: guild.client.user.id,
-    details: {
-      event: "SOLICITATIONS_CLOSED",
-      open: false,
-      note: "Solicitações existentes continuam em análise.",
-    },
+    executorId: guild.client.user!.id,
+    details: { event: "SOLICITATIONS_CLOSED", open: false },
   });
-
-  return updated;
 }
 
 export async function cleanupSolicitationNotice(guild: Guild) {
-  const config = await prisma.guildConfig.findUnique({
-    where: { requestGuildId: guild.id },
-  });
+  const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: guild.id } });
   if (!config?.solicitationNoticeMessageId || !config.solicitationNoticeDeleteAt) return;
   if (config.solicitationNoticeDeleteAt.getTime() > Date.now()) return;
 
@@ -261,10 +203,7 @@ export async function cleanupSolicitationNotice(guild: Guild) {
 
   await prisma.guildConfig.update({
     where: { requestGuildId: guild.id },
-    data: {
-      solicitationNoticeMessageId: null,
-      solicitationNoticeDeleteAt: null,
-    },
+    data: { solicitationNoticeMessageId: null, solicitationNoticeDeleteAt: null },
   });
 }
 
@@ -278,50 +217,32 @@ export function buildProofModal(ticketId: string, ticketMedalId: string, medalNa
   return new ModalBuilder()
     .setCustomId(`solicitation_proofs_modal:${ticketId}:${ticketMedalId}`)
     .setTitle(`Provas — ${medalName}`.slice(0, 45))
-    .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent([
-        `# 📎 Provas — ${medalName}`,
-        "",
-        "Envie todas as provas referentes **somente a esta medalha**.",
-        "",
-        "Você pode anexar até **10 arquivos** nesta etapa.",
-        "",
-        "-# Depois de enviar, o Atlas registrará os arquivos e liberará a próxima etapa.",
-      ].join("\n"))
-    )
+    .addTextDisplayComponents(new TextDisplayBuilder().setContent([
+      `# 📎 Provas — ${medalName}`,
+      "",
+      "Envie todas as provas referentes **somente a esta medalha**.",
+      "",
+      "Você pode anexar até **10 arquivos** nesta etapa.",
+      "",
+      "-# Depois de enviar, o Atlas registrará os arquivos e liberará a próxima etapa.",
+    ].join("\n")))
     .addLabelComponents(
       new LabelBuilder()
         .setLabel("Arquivos das provas")
         .setDescription("Imagens, vídeos e outros arquivos aceitos pelo Discord.")
-        .setFileUploadComponent(upload)
+        .setFileUploadComponent(upload),
     );
 }
 
-export async function createDraftSolicitation(
-  interaction: ButtonInteraction,
-  medalIds: string[],
-) {
+export async function createDraftSolicitation(interaction: ButtonInteraction, medalIds: string[]) {
   if (!interaction.guild) throw new Error("Servidor não encontrado.");
-
-  const config = await prisma.guildConfig.findUnique({
-    where: { requestGuildId: interaction.guild.id },
-  });
+  const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: interaction.guild.id } });
   if (!config?.solicitationsOpen) throw new Error("As solicitações estão encerradas.");
 
-  const existing = await prisma.ticket.findFirst({
-    where: {
-      userId: interaction.user.id,
-      status: "OPEN",
-    },
-    include: { medals: true },
-  });
-
+  const existing = await prisma.ticket.findFirst({ where: { userId: interaction.user.id, status: "OPEN" } });
   if (existing) {
-    if (!existing.submittedAt) {
-      await prisma.ticket.delete({ where: { id: existing.id } });
-    } else {
-      throw new Error("Você já possui uma solicitação em andamento.");
-    }
+    if (!existing.submittedAt) await prisma.ticket.delete({ where: { id: existing.id } });
+    else throw new Error("Você já possui uma solicitação em andamento.");
   }
 
   const member = await interaction.guild.members.fetch(interaction.user.id);
@@ -329,25 +250,19 @@ export async function createDraftSolicitation(
     where: { id: { in: medalIds }, active: true },
     include: { category: true },
   });
-
   if (medals.length !== medalIds.length) throw new Error("Uma ou mais medalhas não estão mais disponíveis.");
 
-  const teamChannelId = getTeamChannelId(config);
   const ticket = await prisma.ticket.create({
     data: {
-      channelId: teamChannelId,
+      channelId: getTeamChannelId(config),
       userId: interaction.user.id,
       username: interaction.user.username,
       nickname: member.displayName,
       robloxUsername: "N/A",
       status: "OPEN",
-      medals: {
-        create: medalIds.map((medalId) => ({ medalId, status: "PENDING" })),
-      },
+      medals: { create: medalIds.map((medalId) => ({ medalId, status: "PENDING" })) },
     },
-    include: {
-      medals: { include: { medal: { include: { category: true } } } },
-    },
+    include: { medals: { include: { medal: { include: { category: true } } } } },
   });
 
   await logAuditEvent({
@@ -356,11 +271,7 @@ export async function createDraftSolicitation(
     executorId: interaction.user.id,
     targetId: interaction.user.id,
     ticketId: ticket.id,
-    details: {
-      solicitation: true,
-      ticketNumber: ticket.ticketNumber,
-      medalIds,
-    },
+    details: { solicitation: true, draft: true, ticketNumber: ticket.ticketNumber, medalIds },
   });
 
   return ticket;
@@ -372,17 +283,14 @@ export async function saveProofsFromModal(interaction: ModalSubmitInteraction) {
   const ticketMedalId = parts[2];
   if (!ticketId || !ticketMedalId || !interaction.guild) throw new Error("Solicitação inválida.");
 
-  const ticketMedal = await prisma.ticketMedal.findUnique({
-    where: { id: ticketMedalId },
-    include: { medal: true, ticket: true },
-  });
-
+  const ticketMedal = await prisma.ticketMedal.findUnique({ where: { id: ticketMedalId }, include: { medal: true, ticket: true } });
   if (!ticketMedal || ticketMedal.ticketId !== ticketId) throw new Error("Medalha não encontrada.");
   if (ticketMedal.ticket.userId !== interaction.user.id) throw new Error("Esta solicitação pertence a outro usuário.");
 
   const attachments = interaction.fields.getUploadedFiles("proof_files", true);
   if (!attachments || attachments.size === 0) throw new Error("Nenhuma prova foi anexada.");
 
+  const config = await prisma.guildConfig.findUniqueOrThrow({ where: { requestGuildId: interaction.guild.id } });
   await prisma.ticketProof.createMany({
     data: [...attachments.values()].map((attachment) => ({
       ticketId,
@@ -390,60 +298,30 @@ export async function saveProofsFromModal(interaction: ModalSubmitInteraction) {
       medalId: ticketMedal.medalId,
       userId: interaction.user.id,
       messageId: interaction.id,
-      channelId: getTeamChannelId(
-        await prisma.guildConfig.findUniqueOrThrow({ where: { requestGuildId: interaction.guild!.id } })
-      ),
+      channelId: getTeamChannelId(config),
       url: attachment.url,
       fileName: attachment.name,
     })),
   });
 
-  await prisma.ticket.update({
-    where: { id: ticketId },
-    data: { proofsSubmittedAt: new Date() },
-  });
-
+  await prisma.ticket.update({ where: { id: ticketId }, data: { proofsSubmittedAt: new Date() } });
   return ticketMedal;
 }
 
 export async function getProofProgress(ticketId: string) {
   return prisma.ticketMedal.findMany({
     where: { ticketId },
-    include: {
-      medal: { include: { category: true } },
-      proofs: true,
-    },
+    include: { medal: { include: { category: true } }, proofs: true },
     orderBy: { createdAt: "asc" },
   });
 }
 
-async function allProofsSubmitted(ticketId: string) {
-  const medals = await getProofProgress(ticketId);
-  return medals.length > 0 && medals.every((medal) => medal.proofs.length > 0);
-}
-
 export async function buildDraftReview(ticketId: string) {
-  const ticket = await prisma.ticket.findUnique({
-    where: { id: ticketId },
-    include: {
-      medals: {
-        include: { medal: { include: { category: true } }, proofs: true },
-        orderBy: { createdAt: "asc" },
-      },
-    },
-  });
-  if (!ticket) throw new Error("Solicitação não encontrada.");
+  const medals = await getProofProgress(ticketId);
+  if (!medals.length) throw new Error("Nenhuma medalha encontrada.");
+  if (medals.some((item) => item.proofs.length === 0)) throw new Error("Todas as medalhas precisam ter pelo menos uma prova.");
 
-  const medalLines = ticket.medals.map((item) =>
-    `${item.medal.emoji ?? "🏅"} **${item.medal.name}** — ${item.proofs.length} prova(s) — ${item.medal.category?.name ?? "Sem categoria"}`
-  );
-
-  const submitButton = new ButtonBuilder()
-    .setCustomId(`solicitation_submit:${ticket.id}`)
-    .setLabel("Enviar solicitação")
-    .setEmoji("📨")
-    .setStyle(ButtonStyle.Success);
-
+  const ticket = await prisma.ticket.findUniqueOrThrow({ where: { id: ticketId } });
   return {
     components: [
       new TextDisplayBuilder().setContent([
@@ -454,102 +332,116 @@ export async function buildDraftReview(ticketId: string) {
         "",
         "## 🏅 Medalhas",
         "",
-        medalLines.join("\n"),
+        medals.map((item) => `${item.medal.emoji ?? "🏅"} **${item.medal.name}** — ${item.proofs.length} prova(s) — ${item.medal.category?.name ?? "Sem categoria"}`).join("\n"),
         "",
         "Revise cuidadosamente as medalhas e as provas antes de enviar.",
         "",
         "-# Depois do envio, a solicitação será encaminhada para a equipe e não poderá ser alterada.",
       ].join("\n")),
-      new ActionRowBuilder<ButtonBuilder>().addComponents(submitButton),
+      new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder().setCustomId(`solicitation_submit:${ticket.id}`).setLabel("Enviar solicitação").setEmoji("📨").setStyle(ButtonStyle.Success),
+      ),
     ],
   };
 }
 
-export async function submitSolicitation(interaction: ButtonInteraction, ticketId: string) {
-  if (!interaction.guild) throw new Error("Servidor não encontrado.");
-
-  const ticket = await prisma.ticket.findUnique({
+export async function buildTeamMessage(ticketId: string) {
+  const ticket = await prisma.ticket.findUniqueOrThrow({
     where: { id: ticketId },
-    include: {
-      medals: {
-        include: { medal: { include: { category: true } }, proofs: true },
-        orderBy: { createdAt: "asc" },
-      },
-    },
+    include: { medals: { include: { medal: { include: { category: true } }, proofs: true }, orderBy: { createdAt: "asc" } } },
   });
 
-  if (!ticket || ticket.userId !== interaction.user.id) throw new Error("Solicitação não encontrada.");
-  if (ticket.submittedAt) throw new Error("Esta solicitação já foi enviada.");
-  if (!(await allProofsSubmitted(ticketId))) throw new Error("Todas as medalhas precisam ter pelo menos uma prova.");
+  const pending = ticket.medals.filter((m) => m.status === "PENDING").length;
+  const approved = ticket.medals.filter((m) => m.status === "APPROVED").length;
+  const denied = ticket.medals.filter((m) => m.status === "DENIED").length;
+  const granted = ticket.medals.filter((m) => m.status === "GRANTED").length;
 
-  const { channel, config } = await getTeamChannel(interaction.guild);
+  const medalSummary = ticket.medals.map((item) => {
+    let status = "🟡 **Em análise**";
+    if (item.status === "APPROVED") status = "🟠 **Aprovada — aguardando entrega**";
+    if (item.status === "DENIED") status = "🔴 **Negada**";
+    if (item.status === "GRANTED") status = "🟢 **Entregue**";
+    return `${item.medal.emoji ?? "🏅"} **${item.medal.name}** — ${status}\n-# ${item.medal.category?.name ?? "Sem categoria"} • ${item.proofs.length} prova(s)`;
+  }).join("\n\n");
 
-  const medalSummary = ticket.medals.map((item) => [
-    `${item.medal.emoji ?? "🏅"} **${item.medal.name}**`,
-    `-# Categoria: ${item.medal.category?.name ?? "Sem categoria"}`,
-    `📎 ${item.proofs.length} prova(s)`,
-  ].join("\n")).join("\n\n");
-
-  const container = [
+  const components: Array<TextDisplayBuilder | ActionRowBuilder<ButtonBuilder>> = [
     new TextDisplayBuilder().setContent([
       `# 📋 SOLICITAÇÃO #${ticket.ticketNumber}`,
       "",
       `👤 **Solicitante:** <@${ticket.userId}> | **${ticket.nickname ?? ticket.username}**`,
-      `🕒 **Enviada:** <t:${Math.floor(Date.now() / 1000)}:F>`,
+      `🕒 **Enviada:** ${ticket.submittedAt ? `<t:${Math.floor(ticket.submittedAt.getTime() / 1000)}:F>` : "Aguardando envio"}`,
       "",
-      "## 🏅 Medalhas solicitadas",
+      "## 📊 Resumo",
+      "",
+      `🟡 Em análise: **${pending}**`,
+      `🟠 Aprovadas: **${approved}**`,
+      `🟢 Entregues: **${granted}**`,
+      `🔴 Negadas: **${denied}**`,
+      "",
+      "## 🏅 Medalhas",
       "",
       medalSummary,
       "",
-      "## 📊 Status",
-      "",
-      "🟡 **Aguardando análise**",
-      "",
-      "-# Cada medalha deve ser analisada individualmente. As provas estão separadas por medalha.",
+      "-# As provas estão organizadas individualmente por medalha. Use o botão abaixo para visualizá-las.",
     ].join("\n")),
+    new ActionRowBuilder<ButtonBuilder>().addComponents(
+      new ButtonBuilder().setCustomId(`solicitation_view_proofs:${ticket.id}`).setLabel("Visualizar provas").setEmoji("📎").setStyle(ButtonStyle.Secondary),
+    ),
   ];
-
-  const viewButton = new ButtonBuilder()
-    .setCustomId(`solicitation_view_proofs:${ticket.id}`)
-    .setLabel("Visualizar provas")
-    .setEmoji("📎")
-    .setStyle(ButtonStyle.Secondary);
-
-  container.push(new ActionRowBuilder<ButtonBuilder>().addComponents(viewButton));
 
   for (const item of ticket.medals) {
     const approve = new ButtonBuilder()
       .setCustomId(`ticket_medal_approve:${item.id}`)
       .setLabel(`Aprovar ${item.medal.name}`.slice(0, 80))
       .setEmoji("✅")
-      .setStyle(ButtonStyle.Success);
+      .setStyle(ButtonStyle.Success)
+      .setDisabled(item.status !== "PENDING");
     const deny = new ButtonBuilder()
       .setCustomId(`ticket_medal_deny:${item.id}`)
       .setLabel(`Negar ${item.medal.name}`.slice(0, 80))
       .setEmoji("❌")
-      .setStyle(ButtonStyle.Danger);
+      .setStyle(ButtonStyle.Danger)
+      .setDisabled(item.status !== "PENDING");
     const deliver = new ButtonBuilder()
       .setCustomId(`ticket_medal_deliver:${item.id}`)
       .setLabel(`Entregar ${item.medal.name}`.slice(0, 80))
       .setEmoji("🏅")
       .setStyle(ButtonStyle.Primary)
-      .setDisabled(true);
-
-    container.push(new ActionRowBuilder<ButtonBuilder>().addComponents(approve, deny, deliver));
+      .setDisabled(item.status !== "APPROVED");
+    components.push(new ActionRowBuilder<ButtonBuilder>().addComponents(approve, deny, deliver));
   }
 
-  const message = await channel.send({
-    components: container,
-    flags: MessageFlags.IsComponentsV2,
-  });
+  return components;
+}
 
-  await prisma.ticket.update({
-    where: { id: ticket.id },
-    data: { submittedAt: new Date(), teamMessageId: message.id },
-  });
+export async function refreshTeamMessage(guild: Guild, ticketId: string) {
+  const ticket = await prisma.ticket.findUnique({ where: { id: ticketId }, select: { teamMessageId: true } });
+  if (!ticket?.teamMessageId) return;
+  const config = await prisma.guildConfig.findUniqueOrThrow({ where: { requestGuildId: guild.id } });
+  const channel = await guild.channels.fetch(getTeamChannelId(config));
+  if (!channel?.isTextBased()) return;
+  const message = await channel.messages.fetch(ticket.teamMessageId).catch(() => null);
+  if (!message) return;
+  await message.edit({ content: null, embeds: [], components: await buildTeamMessage(ticketId), flags: MessageFlags.IsComponentsV2 });
+}
 
-  await interaction.user.send({
-    content: [
+export async function submitSolicitation(interaction: ButtonInteraction, ticketId: string) {
+  if (!interaction.guild) throw new Error("Servidor não encontrado.");
+  const ticket = await prisma.ticket.findUnique({
+    where: { id: ticketId },
+    include: { medals: { include: { medal: { include: { category: true } }, proofs: true }, orderBy: { createdAt: "asc" } } },
+  });
+  if (!ticket || ticket.userId !== interaction.user.id) throw new Error("Solicitação não encontrada.");
+  if (ticket.submittedAt) throw new Error("Esta solicitação já foi enviada.");
+  if (ticket.medals.some((m) => m.proofs.length === 0)) throw new Error("Todas as medalhas precisam ter pelo menos uma prova.");
+
+  const { channel } = await getTeamChannel(interaction.guild);
+  const message = await channel.send({ components: await buildTeamMessage(ticket.id), flags: MessageFlags.IsComponentsV2 });
+
+  await prisma.ticket.update({ where: { id: ticket.id }, data: { submittedAt: new Date(), teamMessageId: message.id } });
+
+  try {
+    await interaction.user.send([
       "## 📨 Solicitação recebida",
       "",
       `Sua solicitação **#${ticket.ticketNumber}** foi enviada para a equipe.`,
@@ -557,8 +449,8 @@ export async function submitSolicitation(interaction: ButtonInteraction, ticketI
       `🏅 **${ticket.medals.length} medalha(s)** aguardando análise.`,
       "",
       "Aguarde. Você receberá novas mensagens quando houver decisões e quando as medalhas forem efetivamente entregues.",
-    ].join("\n"),
-  }).catch(() => undefined);
+    ].join("\n"));
+  } catch {}
 
   await logAuditEvent({
     guild: interaction.guild,
@@ -566,38 +458,24 @@ export async function submitSolicitation(interaction: ButtonInteraction, ticketI
     executorId: interaction.user.id,
     targetId: interaction.user.id,
     ticketId: ticket.id,
-    details: {
-      solicitation: true,
-      submitted: true,
-      ticketNumber: ticket.ticketNumber,
-      teamChannelId: channel.id,
-      teamMessageId: message.id,
-    },
+    details: { solicitation: true, submitted: true, ticketNumber: ticket.ticketNumber, teamChannelId: channel.id, teamMessageId: message.id },
   });
 
-  return { ticket, message, config };
+  return message;
 }
 
 export async function viewProofs(interaction: ButtonInteraction, ticketId: string) {
   if (!interaction.guild) throw new Error("Servidor não encontrado.");
-
-  const config = await prisma.guildConfig.findUnique({
-    where: { requestGuildId: interaction.guild.id },
-  });
-  if (!config) throw new Error("Configuração não encontrada.");
-
+  const config = await prisma.guildConfig.findUniqueOrThrow({ where: { requestGuildId: interaction.guild.id } });
   const member = await interaction.guild.members.fetch(interaction.user.id);
-  const isStaff = member.roles.cache.has(config.staffRoleId) ||
-    (!!config.responsibleRoleId && member.roles.cache.has(config.responsibleRoleId));
+  const isStaff = member.roles.cache.has(config.staffRoleId) || (!!config.responsibleRoleId && member.roles.cache.has(config.responsibleRoleId));
   if (!isStaff) throw new Error("Apenas a equipe pode visualizar as provas.");
 
   const medals = await getProofProgress(ticketId);
   const select = new StringSelectMenuBuilder()
     .setCustomId(`solicitation_proofs_select:${ticketId}`)
     .setPlaceholder("Escolha a medalha para visualizar as provas")
-    .setMinValues(1)
-    .setMaxValues(1);
-
+    .setMinValues(1).setMaxValues(1);
   for (const item of medals) {
     select.addOptions(new StringSelectMenuOptionBuilder()
       .setLabel(item.medal.name.slice(0, 100))
@@ -607,60 +485,36 @@ export async function viewProofs(interaction: ButtonInteraction, ticketId: strin
   }
 
   await interaction.reply({
-    content: [
-      "## 📎 Visualizar provas",
-      "",
-      "Selecione uma medalha para visualizar exclusivamente as provas enviadas para ela.",
-    ].join("\n"),
+    content: "## 📎 Visualizar provas\n\nSelecione uma medalha para visualizar exclusivamente as provas enviadas para ela.",
     components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(select)],
     flags: MessageFlags.Ephemeral,
   });
 }
 
-export async function viewProofsForMedal(interaction: import("discord.js").StringSelectMenuInteraction) {
+export async function viewProofsForMedal(interaction: StringSelectMenuInteraction) {
   const parts = interaction.customId.split(":");
   const ticketId = parts[1];
   const medalId = interaction.values[0];
   if (!ticketId || !medalId || !interaction.guild) throw new Error("Seleção inválida.");
 
-  const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: interaction.guild.id } });
+  const config = await prisma.guildConfig.findUniqueOrThrow({ where: { requestGuildId: interaction.guild.id } });
   const member = await interaction.guild.members.fetch(interaction.user.id);
-  const isStaff = !!config && (member.roles.cache.has(config.staffRoleId) || (!!config.responsibleRoleId && member.roles.cache.has(config.responsibleRoleId)));
+  const isStaff = member.roles.cache.has(config.staffRoleId) || (!!config.responsibleRoleId && member.roles.cache.has(config.responsibleRoleId));
   if (!isStaff) throw new Error("Acesso restrito à equipe.");
 
-  const item = await prisma.ticketMedal.findFirst({
-    where: { ticketId, medalId },
-    include: { medal: { include: { category: true } }, proofs: true },
-  });
+  const item = await prisma.ticketMedal.findFirst({ where: { ticketId, medalId }, include: { medal: { include: { category: true } }, proofs: true } });
   if (!item) throw new Error("Medalha não encontrada.");
 
   const lines = item.proofs.length
     ? item.proofs.map((proof, index) => `${index + 1}. [${proof.fileName ?? "Abrir prova"}](${proof.url})`).join("\n")
     : "Nenhuma prova registrada.";
 
-  await interaction.update({
-    content: [
-      `## 📎 Provas — ${item.medal.name}`,
-      "",
-      `**Categoria:** ${item.medal.category?.name ?? "Sem categoria"}`,
-      `**Quantidade:** ${item.proofs.length}`,
-      "",
-      lines,
-    ].join("\n"),
-    components: [],
-  });
-}
-
-export async function sendDecisionDM(userId: string, content: string) {
-  try {
-    const user = await import("discord.js").then(({ User }) => User);
-    void user;
-  } catch {}
+  await interaction.update({ content: [`## 📎 Provas — ${item.medal.name}`, "", `**Categoria:** ${item.medal.category?.name ?? "Sem categoria"}`, `**Quantidade:** ${item.proofs.length}`, "", lines].join("\n"), components: [] });
 }
 
 export async function notifyApproval(userId: string, medalName: string) {
   try {
-    const client = (await import("../core/discord/client.js")).client;
+    const { client } = await import("../core/discord/client.js");
     const user = await client.users.fetch(userId);
     await user.send(`## 🟢 Medalha aprovada\n\nSua medalha **${medalName}** foi aprovada pela equipe e está aguardando a entrega efetiva.`);
   } catch {}
@@ -668,7 +522,7 @@ export async function notifyApproval(userId: string, medalName: string) {
 
 export async function notifyDenial(userId: string, medalName: string, reason: string) {
   try {
-    const client = (await import("../core/discord/client.js")).client;
+    const { client } = await import("../core/discord/client.js");
     const user = await client.users.fetch(userId);
     await user.send(`## 🔴 Medalha não aprovada\n\nSua solicitação para **${medalName}** não foi aprovada.\n\n**Motivo:**\n${reason}`);
   } catch {}
@@ -676,7 +530,7 @@ export async function notifyDenial(userId: string, medalName: string, reason: st
 
 export async function notifyDelivery(userId: string, medalName: string) {
   try {
-    const client = (await import("../core/discord/client.js")).client;
+    const { client } = await import("../core/discord/client.js");
     const user = await client.users.fetch(userId);
     await user.send(`## 🏅 Medalha entregue\n\nA medalha **${medalName}** foi efetivamente entregue no servidor do EB.`);
   } catch {}
