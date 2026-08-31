@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "tsx watch src/core/index.ts",
     "register": "tsx src/core/discord/register-commands.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/core/index.js",
     "lint": "eslint .",
     "format": "prettier --write ."
@@ -16,7 +16,6 @@
     "discord",
     "discord-bot",
     "typescript",
-    "prisma",
     "postgresql"
   ],
   "author": "Iago Antônio Viana Lima",
