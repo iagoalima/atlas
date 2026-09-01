@@ -8,6 +8,8 @@ export async function handleSeasonalReviewButton(interaction: ButtonInteraction)
   if (!match || !interaction.guild) return false;
   const action = match[1];
   const ticketMedalId = match[2];
+  if (!ticketMedalId) return true;
+
   const tm = await prisma.ticketMedal.findUnique({ where: { id: ticketMedalId }, include: { ticket: true, medal: { include: { approvalRoles: true, deliveryPermissionRoles: true, category: true } } } });
   if (!tm || tm.ticket.requestGuildId !== interaction.guild.id || tm.ticket.channelId !== interaction.channelId) {
     await interaction.reply({ content: "❌ Esta solicitação não pertence a este canal de análise.", flags: MessageFlags.Ephemeral });
@@ -16,7 +18,8 @@ export async function handleSeasonalReviewButton(interaction: ButtonInteraction)
   const member = await interaction.guild.members.fetch(interaction.user.id);
 
   if (action === "approve" || action === "deny") {
-    if (!member.roles.cache.has(tm.ticket.requestGuildId ? (await prisma.guildConfig.findUnique({ where: { requestGuildId: interaction.guild.id }, select: { staffRoleId: true } }))?.staffRoleId ?? "" : "")) {
+    const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: interaction.guild.id }, select: { staffRoleId: true } });
+    if (!config?.staffRoleId || !member.roles.cache.has(config.staffRoleId)) {
       await interaction.reply({ content: "## 🔒 Acesso restrito\n\nApenas a equipe de medalhas pode analisar solicitações.", flags: MessageFlags.Ephemeral });
       return true;
     }
@@ -54,6 +57,11 @@ export async function handleSeasonalReviewButton(interaction: ButtonInteraction)
 export async function handleSeasonalReviewModal(interaction: ModalSubmitInteraction): Promise<boolean> {
   if (!interaction.customId.startsWith("request_deny:") || !interaction.guild) return false;
   const id = interaction.customId.split(":")[1];
+  if (!id) {
+    await interaction.reply({ content: "❌ Solicitação inválida.", flags: MessageFlags.Ephemeral });
+    return true;
+  }
+
   const tm = await prisma.ticketMedal.findUnique({ where: { id }, include: { ticket: true, medal: { include: { approvalRoles: true } } } });
   if (!tm || tm.ticket.requestGuildId !== interaction.guild.id) return true;
   const member = await interaction.guild.members.fetch(interaction.user.id);
