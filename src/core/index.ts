@@ -4,6 +4,7 @@ import { commands, loadCommands } from "./discord/commands.js";
 import { connectDatabase } from "./database.js";
 import { installInteractionMessageStyle } from "../ui/interaction-messages.js";
 import { handleRequestButton, handleRequestMessage, handleRequestModal, handleRequestSelect, handleProofView } from "../services/request-flow.service.js";
+import { handleProofUploadButton } from "../services/request-proof-button.service.js";
 import { handleSeasonalReviewButton, handleSeasonalReviewModal } from "../services/request-review.service.js";
 import { startRequestNotifications } from "../services/request-notification.service.js";
 
@@ -22,6 +23,7 @@ client.on("interactionCreate", async (interaction) => {
   try {
     installInteractionMessageStyle(interaction);
     if (interaction.isButton()) {
+      if (await handleProofUploadButton(interaction)) return;
       if (await handleRequestButton(interaction)) return;
       if (await handleProofView(interaction)) return;
       if (interaction.customId.startsWith("ticket_medal_approve:") || interaction.customId.startsWith("ticket_medal_deny:") || interaction.customId.startsWith("ticket_medal_deliver:")) {
