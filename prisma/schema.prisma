@@ -3,7 +3,9 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-datasource db { provider = "postgresql" }
+datasource db {
+  provider = "postgresql"
+}
 
 model GuildConfig {
   id String @id @default(cuid())
@@ -72,6 +74,7 @@ model MedalRole {
   @@index([medalId])
   @@map("medal_roles")
 }
+
 model MedalApprovalRole {
   id String @id @default(cuid())
   medalId String
@@ -82,6 +85,7 @@ model MedalApprovalRole {
   @@index([medalId])
   @@map("medal_approval_roles")
 }
+
 model MedalDeliveryPermissionRole {
   id String @id @default(cuid())
   medalId String
@@ -167,6 +171,7 @@ model TicketForceCloseApproval {
   @@index([ticketId])
   @@map("ticket_force_close_approvals")
 }
+
 model Transcript {
   id String @id @default(cuid())
   ticketId String @unique
@@ -175,6 +180,7 @@ model Transcript {
   ticket Ticket @relation(fields: [ticketId], references: [id])
   @@map("transcripts")
 }
+
 model AuditLog {
   id String @id @default(cuid())
   action AuditAction
@@ -192,11 +198,39 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-enum TicketStatus { OPEN APPROVED DENIED CLOSED }
-enum TicketMedalStatus { PENDING APPROVED DENIED GRANTED }
+enum TicketStatus {
+  OPEN
+  APPROVED
+  DENIED
+  CLOSED
+}
+
+enum TicketMedalStatus {
+  PENDING
+  APPROVED
+  DENIED
+  GRANTED
+}
+
 enum AuditAction {
-  TICKET_CREATED TICKET_CLOSED TICKET_DELETED
-  MEDAL_CREATED MEDAL_UPDATED MEDAL_REMOVED MEDAL_APPROVED MEDAL_ACCEPTED MEDAL_GRANTED MEDAL_DENIED
-  MEDAL_SELF_DELIVERY_BLOCKED MEDAL_SELF_DELIVERY_ATTEMPT
-  TRANSCRIPT_CREATED CONFIG_UPDATED CATEGORY_CREATED CATEGORY_UPDATED CATEGORY_REMOVED
+  TICKET_CREATED
+  TICKET_CLOSED
+  TICKET_DELETED
+
+  MEDAL_CREATED
+  MEDAL_UPDATED
+  MEDAL_REMOVED
+  MEDAL_APPROVED
+  MEDAL_ACCEPTED
+  MEDAL_GRANTED
+  MEDAL_DENIED
+
+  MEDAL_SELF_DELIVERY_BLOCKED
+  MEDAL_SELF_DELIVERY_ATTEMPT
+
+  TRANSCRIPT_CREATED
+  CONFIG_UPDATED
+  CATEGORY_CREATED
+  CATEGORY_UPDATED
+  CATEGORY_REMOVED
 }
