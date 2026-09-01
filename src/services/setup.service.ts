@@ -26,7 +26,7 @@ export function getSetupData(guildId: string): SetupData {
 }
 
 export function updateSetupData(guildId: string, data: Partial<SetupData>): SetupData {
-  const updated = { ...getSetupData(guildId), ...data };
+  const updated: SetupData = { ...getSetupData(guildId), ...data };
   setupSessions.set(guildId, updated);
   return updated;
 }
@@ -36,20 +36,20 @@ export async function loadGuildConfig(guildId: string): Promise<SetupData> {
   if (!config) return {};
 
   const data: SetupData = {
-    staffRoleId: config.staffRoleId || undefined,
-    responsibleRoleId: config.responsibleRoleId || undefined,
-    logChannelId: config.logChannelId || undefined,
-    deliveryGuildId: config.deliveryGuildId || undefined,
-    medalCatalogChannelId: config.medalCatalogChannelId || undefined,
-    medalCatalogMessageId: config.medalCatalogMessageId || undefined,
-    requestPanelChannelId: config.requestPanelChannelId || undefined,
-    requestPanelMessageId: config.requestPanelMessageId || undefined,
-    requestReviewChannelId: config.requestReviewChannelId || undefined,
+    staffRoleId: config.staffRoleId,
+    logChannelId: config.logChannelId,
     requestsOpen: config.requestsOpen,
-    ticketCategoryId: config.ticketCategoryId || undefined,
-    transcriptChannelId: config.transcriptChannelId || undefined,
-    ticketPanelChannelId: config.ticketPanelChannelId || undefined,
-    ticketPanelMessageId: config.ticketPanelMessageId || undefined,
+    ...(config.responsibleRoleId ? { responsibleRoleId: config.responsibleRoleId } : {}),
+    ...(config.deliveryGuildId ? { deliveryGuildId: config.deliveryGuildId } : {}),
+    ...(config.medalCatalogChannelId ? { medalCatalogChannelId: config.medalCatalogChannelId } : {}),
+    ...(config.medalCatalogMessageId ? { medalCatalogMessageId: config.medalCatalogMessageId } : {}),
+    ...(config.requestPanelChannelId ? { requestPanelChannelId: config.requestPanelChannelId } : {}),
+    ...(config.requestPanelMessageId ? { requestPanelMessageId: config.requestPanelMessageId } : {}),
+    ...(config.requestReviewChannelId ? { requestReviewChannelId: config.requestReviewChannelId } : {}),
+    ...(config.ticketCategoryId ? { ticketCategoryId: config.ticketCategoryId } : {}),
+    ...(config.transcriptChannelId ? { transcriptChannelId: config.transcriptChannelId } : {}),
+    ...(config.ticketPanelChannelId ? { ticketPanelChannelId: config.ticketPanelChannelId } : {}),
+    ...(config.ticketPanelMessageId ? { ticketPanelMessageId: config.ticketPanelMessageId } : {}),
   };
 
   setupSessions.set(guildId, data);
