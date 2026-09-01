@@ -4,6 +4,7 @@ import { commands, loadCommands } from "./discord/commands.js";
 import { connectDatabase } from "./database.js";
 import { installInteractionMessageStyle } from "../ui/interaction-messages.js";
 import { handleRequestButton, handleRequestMessage, handleRequestModal, handleRequestSelect, handleProofView } from "../services/request-flow.service.js";
+import { handleSeasonalReviewButton, handleSeasonalReviewModal } from "../services/request-review.service.js";
 import { startRequestNotifications } from "../services/request-notification.service.js";
 
 client.once("clientReady", (bot) => console.log(`Atlas conectado como ${bot.user.tag}`));
@@ -23,6 +24,9 @@ client.on("interactionCreate", async (interaction) => {
     if (interaction.isButton()) {
       if (await handleRequestButton(interaction)) return;
       if (await handleProofView(interaction)) return;
+      if (interaction.customId.startsWith("ticket_medal_approve:") || interaction.customId.startsWith("ticket_medal_deny:") || interaction.customId.startsWith("ticket_medal_deliver:")) {
+        if (await handleSeasonalReviewButton(interaction)) return;
+      }
       if (interaction.customId.startsWith("ticket_")) {
         const { handleTicketButton } = await import("../interactions/buttons/ticket.buttons.js");
         await handleTicketButton(interaction);
@@ -47,6 +51,7 @@ client.on("interactionCreate", async (interaction) => {
     }
     if (interaction.isModalSubmit()) {
       if (await handleRequestModal(interaction)) return;
+      if (await handleSeasonalReviewModal(interaction)) return;
       if (interaction.customId.startsWith("ticket_roblox_modal:")) { const { handleTicketRobloxModal } = await import("../interactions/modals/ticket.modals.js"); await handleTicketRobloxModal(interaction); return; }
       if (interaction.customId === "medal_create") { const { handleMedalModal } = await import("../commands/medal.js"); await handleMedalModal(interaction); return; }
       if (interaction.customId === "category_create") { const { handleCategoryModal } = await import("../commands/category.js"); await handleCategoryModal(interaction); return; }
