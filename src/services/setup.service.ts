@@ -1,290 +1,103 @@
 import { prisma } from "../infrastructure/database/prisma.js";
 
-// ==========================================================
-// TIPOS
-// ==========================================================
-
 export interface SetupData {
   staffRoleId?: string;
-
   responsibleRoleId?: string;
-
-  ticketCategoryId?: string;
-
   logChannelId?: string;
-
-  transcriptChannelId?: string;
-
   deliveryGuildId?: string;
-
   medalCatalogChannelId?: string;
-
   medalCatalogMessageId?: string;
+  requestPanelChannelId?: string;
+  requestPanelMessageId?: string;
+  requestReviewChannelId?: string;
+  requestsOpen?: boolean;
 
+  // Campos antigos mantidos somente para compatibilidade com instalações anteriores.
+  ticketCategoryId?: string;
+  transcriptChannelId?: string;
   ticketPanelChannelId?: string;
-
   ticketPanelMessageId?: string;
 }
 
-// ==========================================================
-// SESSÕES TEMPORÁRIAS
-// ==========================================================
+const setupSessions = new Map<string, SetupData>();
 
-const setupSessions =
-  new Map<string, SetupData>();
-
-// ==========================================================
-// BUSCA CONFIGURAÇÃO TEMPORÁRIA
-// ==========================================================
-
-export function getSetupData(
-  guildId: string
-): SetupData {
-  return (
-    setupSessions.get(guildId) ?? {}
-  );
+export function getSetupData(guildId: string): SetupData {
+  return setupSessions.get(guildId) ?? {};
 }
 
-// ==========================================================
-// ATUALIZA CONFIGURAÇÃO TEMPORÁRIA
-// ==========================================================
-
-export function updateSetupData(
-  guildId: string,
-  data: Partial<SetupData>
-): SetupData {
-  const current =
-    getSetupData(guildId);
-
-  const updated: SetupData = {
-    ...current,
-    ...data,
-  };
-
-  setupSessions.set(
-    guildId,
-    updated
-  );
-
+export function updateSetupData(guildId: string, data: Partial<SetupData>): SetupData {
+  const updated = { ...getSetupData(guildId), ...data };
+  setupSessions.set(guildId, updated);
   return updated;
 }
 
-// ==========================================================
-// CARREGA CONFIGURAÇÃO DO BANCO
-// ==========================================================
+export async function loadGuildConfig(guildId: string): Promise<SetupData> {
+  const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: guildId } });
+  if (!config) return {};
 
-export async function loadGuildConfig(
-  guildId: string
-): Promise<SetupData> {
-  const config =
-    await prisma.guildConfig.findUnique({
-      where: {
-        requestGuildId:
-          guildId,
-      },
-    });
+  const data: SetupData = {
+    staffRoleId: config.staffRoleId || undefined,
+    responsibleRoleId: config.responsibleRoleId || undefined,
+    logChannelId: config.logChannelId || undefined,
+    deliveryGuildId: config.deliveryGuildId || undefined,
+    medalCatalogChannelId: config.medalCatalogChannelId || undefined,
+    medalCatalogMessageId: config.medalCatalogMessageId || undefined,
+    requestPanelChannelId: config.requestPanelChannelId || undefined,
+    requestPanelMessageId: config.requestPanelMessageId || undefined,
+    requestReviewChannelId: config.requestReviewChannelId || undefined,
+    requestsOpen: config.requestsOpen,
+    ticketCategoryId: config.ticketCategoryId || undefined,
+    transcriptChannelId: config.transcriptChannelId || undefined,
+    ticketPanelChannelId: config.ticketPanelChannelId || undefined,
+    ticketPanelMessageId: config.ticketPanelMessageId || undefined,
+  };
 
-  if (!config) {
-    return {};
-  }
-
-  const data: SetupData = {};
-
-  // ========================================================
-  // CARGO DA EQUIPE
-  // ========================================================
-
-  if (config.staffRoleId) {
-    data.staffRoleId =
-      config.staffRoleId;
-  }
-
-  // ========================================================
-  // CARGO DOS RESPONSÁVEIS
-  // ========================================================
-
-  if (config.responsibleRoleId) {
-    data.responsibleRoleId =
-      config.responsibleRoleId;
-  }
-
-  // ========================================================
-  // CATEGORIA DE TICKETS
-  // ========================================================
-
-  if (config.ticketCategoryId) {
-    data.ticketCategoryId =
-      config.ticketCategoryId;
-  }
-
-  // ========================================================
-  // CANAL DE LOGS
-  // ========================================================
-
-  if (config.logChannelId) {
-    data.logChannelId =
-      config.logChannelId;
-  }
-
-  // ========================================================
-  // CANAL DE TRANSCRIPTS
-  // ========================================================
-
-  if (config.transcriptChannelId) {
-    data.transcriptChannelId =
-      config.transcriptChannelId;
-  }
-
-  // ========================================================
-  // SERVIDOR DE ENTREGA
-  // ========================================================
-
-  if (config.deliveryGuildId) {
-    data.deliveryGuildId =
-      config.deliveryGuildId;
-  }
-
-  // ========================================================
-  // CATÁLOGO DE MEDALHAS
-  // ========================================================
-
-  if (config.medalCatalogChannelId) {
-    data.medalCatalogChannelId =
-      config.medalCatalogChannelId;
-  }
-
-  if (config.medalCatalogMessageId) {
-    data.medalCatalogMessageId =
-      config.medalCatalogMessageId;
-  }
-
-  // ========================================================
-  // PAINEL DE TICKETS
-  // ========================================================
-
-  if (config.ticketPanelChannelId) {
-    data.ticketPanelChannelId =
-      config.ticketPanelChannelId;
-  }
-
-  if (config.ticketPanelMessageId) {
-    data.ticketPanelMessageId =
-      config.ticketPanelMessageId;
-  }
-
-  // ========================================================
-  // SALVA NA SESSÃO
-  // ========================================================
-
-  setupSessions.set(
-    guildId,
-    data
-  );
-
+  setupSessions.set(guildId, data);
   return data;
 }
 
-// ==========================================================
-// LIMPA SESSÃO
-// ==========================================================
-
-export function clearSetupData(
-  guildId: string
-): void {
-  setupSessions.delete(
-    guildId
-  );
+export function clearSetupData(guildId: string): void {
+  setupSessions.delete(guildId);
 }
 
-// ==========================================================
-// SALVA CONFIGURAÇÃO
-// ==========================================================
-
-export async function saveGuildConfig(
-  guildId: string,
-  data: SetupData
-): Promise<void> {
-  // ========================================================
-  // VALIDA CAMPOS OBRIGATÓRIOS
-  // ========================================================
-
-  if (
-    !data.staffRoleId ||
-    !data.responsibleRoleId ||
-    !data.ticketCategoryId ||
-    !data.logChannelId ||
-    !data.transcriptChannelId ||
-    !data.deliveryGuildId
-  ) {
-    throw new Error(
-      "Configuração incompleta."
-    );
+export async function saveGuildConfig(guildId: string, data: SetupData): Promise<void> {
+  if (!data.staffRoleId || !data.logChannelId || !data.medalCatalogChannelId || !data.requestPanelChannelId || !data.requestReviewChannelId) {
+    throw new Error("Configuração incompleta.");
   }
 
-  // ========================================================
-  // SALVA NO BANCO
-  // ========================================================
+  const existing = await prisma.guildConfig.findUnique({ where: { requestGuildId: guildId } });
+
+  const compatibilityTicketCategoryId = data.ticketCategoryId ?? existing?.ticketCategoryId ?? "UNUSED";
+  const compatibilityTranscriptChannelId = data.transcriptChannelId ?? existing?.transcriptChannelId ?? "UNUSED";
 
   await prisma.guildConfig.upsert({
-    where: {
-      requestGuildId:
-        guildId,
-    },
-
+    where: { requestGuildId: guildId },
     update: {
-  staffRoleId:
-    data.staffRoleId,
-  responsibleRoleId:
-    data.responsibleRoleId,
-  ticketCategoryId:
-    data.ticketCategoryId,
-  logChannelId:
-    data.logChannelId,
-  transcriptChannelId:
-    data.transcriptChannelId,
-  deliveryGuildId:
-    data.deliveryGuildId,
-
-  medalCatalogChannelId:
-    data.medalCatalogChannelId ??
-    null,
-
-  ticketPanelChannelId:
-    data.ticketPanelChannelId ??
-    null,
-},
-
+      staffRoleId: data.staffRoleId,
+      responsibleRoleId: data.responsibleRoleId ?? null,
+      logChannelId: data.logChannelId,
+      deliveryGuildId: data.deliveryGuildId ?? null,
+      medalCatalogChannelId: data.medalCatalogChannelId,
+      requestPanelChannelId: data.requestPanelChannelId,
+      requestPanelMessageId: data.requestPanelMessageId ?? null,
+      requestReviewChannelId: data.requestReviewChannelId,
+      requestsOpen: data.requestsOpen ?? existing?.requestsOpen ?? false,
+    },
     create: {
-  requestGuildId:
-    guildId,
-  staffRoleId:
-    data.staffRoleId,
-  responsibleRoleId:
-    data.responsibleRoleId,
-  ticketCategoryId:
-    data.ticketCategoryId,
-  logChannelId:
-    data.logChannelId,
-  transcriptChannelId:
-    data.transcriptChannelId,
-  deliveryGuildId:
-    data.deliveryGuildId,
-
-  medalCatalogChannelId:
-    data.medalCatalogChannelId ??
-    null,
-
-  ticketPanelChannelId:
-    data.ticketPanelChannelId ??
-    null,
-},
+      requestGuildId: guildId,
+      staffRoleId: data.staffRoleId,
+      responsibleRoleId: data.responsibleRoleId ?? null,
+      logChannelId: data.logChannelId,
+      deliveryGuildId: data.deliveryGuildId ?? null,
+      ticketCategoryId: compatibilityTicketCategoryId,
+      transcriptChannelId: compatibilityTranscriptChannelId,
+      medalCatalogChannelId: data.medalCatalogChannelId,
+      requestPanelChannelId: data.requestPanelChannelId,
+      requestPanelMessageId: data.requestPanelMessageId ?? null,
+      requestReviewChannelId: data.requestReviewChannelId,
+      requestsOpen: data.requestsOpen ?? false,
+    },
   });
 
-  // ========================================================
-  // LIMPA SESSÃO
-  // ========================================================
-
-  clearSetupData(
-    guildId
-  );
+  clearSetupData(guildId);
 }
