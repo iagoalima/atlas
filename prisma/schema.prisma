@@ -3,53 +3,37 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
-datasource db {
-  provider = "postgresql"
-}
+datasource db { provider = "postgresql" }
 
 model GuildConfig {
-  id                  String  @id @default(cuid())
-  requestGuildId      String  @unique
-  deliveryGuildId     String?
-  ticketCategoryId    String
-  logChannelId        String
+  id String @id @default(cuid())
+  requestGuildId String @unique
+  deliveryGuildId String?
+  ticketCategoryId String
+  logChannelId String
   transcriptChannelId String
-  staffRoleId         String
-  responsibleRoleId   String?
-
+  staffRoleId String
+  responsibleRoleId String?
   medalCatalogMessageId String?
   medalCatalogChannelId String?
-
   ticketPanelChannelId String?
   ticketPanelMessageId String?
-
-  // ==========================================================
-  // NOVO MODELO DE SOLICITAÇÕES
-  // ==========================================================
-  // Canal público onde fica o painel de solicitação.
   requestPanelChannelId String?
   requestPanelMessageId String?
-
-  // Canal único e privado onde todas as solicitações são analisadas.
   requestReviewChannelId String?
-
-  // Controla as temporadas de solicitação.
-  // false = novas solicitações bloqueadas; solicitações já enviadas continuam em análise.
   requestsOpen Boolean @default(false)
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   @@map("guild_configs")
 }
 
 model MedalCategory {
-  id          String  @id @default(cuid())
-  name        String  @unique
+  id String @id @default(cuid())
+  name String @unique
   description String?
-  emoji       String?
-  position    Int     @default(0)
-  active      Boolean @default(true)
+  emoji String?
+  position Int @default(0)
+  active Boolean @default(true)
   catalogMessageId String?
   medals Medal[]
   createdAt DateTime @default(now())
@@ -58,55 +42,50 @@ model MedalCategory {
 }
 
 model Medal {
-  id            String  @id @default(cuid())
-  name          String
-  requirements  String
+  id String @id @default(cuid())
+  name String
+  requirements String
   jurisprudence String?
-  emoji         String?
-  color         String?
-  categoryId    String
-  active        Boolean @default(true)
-
+  emoji String?
+  color String?
+  categoryId String
+  active Boolean @default(true)
   category MedalCategory @relation(fields: [categoryId], references: [id])
   deliveryRoles MedalRole[]
   approvalRoles MedalApprovalRole[]
   deliveryPermissionRoles MedalDeliveryPermissionRole[]
   tickets TicketMedal[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
   @@index([categoryId])
   @@index([active])
   @@map("medals")
 }
 
 model MedalRole {
-  id        String   @id @default(cuid())
-  medalId   String
-  roleId    String
+  id String @id @default(cuid())
+  medalId String
+  roleId String
   createdAt DateTime @default(now())
   medal Medal @relation(fields: [medalId], references: [id], onDelete: Cascade)
   @@unique([medalId, roleId])
   @@index([medalId])
   @@map("medal_roles")
 }
-
 model MedalApprovalRole {
-  id        String   @id @default(cuid())
-  medalId   String
-  roleId    String
+  id String @id @default(cuid())
+  medalId String
+  roleId String
   createdAt DateTime @default(now())
   medal Medal @relation(fields: [medalId], references: [id], onDelete: Cascade)
   @@unique([medalId, roleId])
   @@index([medalId])
   @@map("medal_approval_roles")
 }
-
 model MedalDeliveryPermissionRole {
-  id        String   @id @default(cuid())
-  medalId   String
-  roleId    String
+  id String @id @default(cuid())
+  medalId String
+  roleId String
   createdAt DateTime @default(now())
   medal Medal @relation(fields: [medalId], references: [id], onDelete: Cascade)
   @@unique([medalId, roleId])
@@ -115,44 +94,42 @@ model MedalDeliveryPermissionRole {
 }
 
 model Ticket {
-  id                String       @id @default(cuid())
-  ticketNumber      Int          @unique @default(autoincrement())
-  channelId         String
-  userId            String
-  username          String
-  nickname          String?
-  robloxUsername    String
-  status            TicketStatus @default(OPEN)
-  staffId           String?
-  reason            String?
+  id String @id @default(cuid())
+  ticketNumber Int @unique @default(autoincrement())
+  channelId String
+  requestGuildId String?
+  userId String
+  username String
+  nickname String?
+  robloxUsername String
+  status TicketStatus @default(OPEN)
+  staffId String?
+  reason String?
   proofsSubmittedAt DateTime?
-  createdAt         DateTime     @default(now())
-  closedAt          DateTime?
-
+  proofCollectionIndex Int @default(0)
+  createdAt DateTime @default(now())
+  closedAt DateTime?
   medals TicketMedal[]
   proofs TicketProof[]
-  logs   AuditLog[]
+  logs AuditLog[]
   transcript Transcript?
   forceCloseApprovals TicketForceCloseApproval[]
-
   @@index([channelId])
+  @@index([requestGuildId])
   @@index([userId])
   @@index([status])
   @@map("tickets")
 }
 
 model TicketProof {
-  id        String   @id @default(cuid())
-  ticketId  String
-  userId    String
+  id String @id @default(cuid())
+  ticketId String
+  userId String
   messageId String
   channelId String
-  url       String
-  fileName  String?
-
-  // Medalha à qual esta prova pertence.
-  medalId   String?
-
+  url String
+  fileName String?
+  medalId String?
   createdAt DateTime @default(now())
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   @@index([ticketId])
@@ -163,14 +140,14 @@ model TicketProof {
 }
 
 model TicketMedal {
-  id        String            @id @default(cuid())
-  ticketId  String
-  medalId   String
-  status    TicketMedalStatus @default(PENDING)
+  id String @id @default(cuid())
+  ticketId String
+  medalId String
+  status TicketMedalStatus @default(PENDING)
   decidedBy String?
-  reason    String?
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
+  reason String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   medal Medal @relation(fields: [medalId], references: [id])
   @@unique([ticketId, medalId])
@@ -181,34 +158,32 @@ model TicketMedal {
 }
 
 model TicketForceCloseApproval {
-  id        String   @id @default(cuid())
-  ticketId  String
-  userId    String
+  id String @id @default(cuid())
+  ticketId String
+  userId String
   createdAt DateTime @default(now())
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
   @@unique([ticketId, userId])
   @@index([ticketId])
   @@map("ticket_force_close_approvals")
 }
-
 model Transcript {
-  id        String   @id @default(cuid())
-  ticketId  String   @unique
-  url       String
+  id String @id @default(cuid())
+  ticketId String @unique
+  url String
   createdAt DateTime @default(now())
   ticket Ticket @relation(fields: [ticketId], references: [id])
   @@map("transcripts")
 }
-
 model AuditLog {
-  id         String      @id @default(cuid())
-  action     AuditAction
+  id String @id @default(cuid())
+  action AuditAction
   executorId String
-  targetId   String?
-  ticketId   String?
-  medalId    String?
-  details    Json?
-  createdAt  DateTime    @default(now())
+  targetId String?
+  ticketId String?
+  medalId String?
+  details Json?
+  createdAt DateTime @default(now())
   ticket Ticket? @relation(fields: [ticketId], references: [id])
   @@index([action])
   @@index([executorId])
@@ -217,36 +192,11 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-enum TicketStatus {
-  OPEN
-  APPROVED
-  DENIED
-  CLOSED
-}
-
-enum TicketMedalStatus {
-  PENDING
-  APPROVED
-  DENIED
-  GRANTED
-}
-
+enum TicketStatus { OPEN APPROVED DENIED CLOSED }
+enum TicketMedalStatus { PENDING APPROVED DENIED GRANTED }
 enum AuditAction {
-  TICKET_CREATED
-  TICKET_CLOSED
-  TICKET_DELETED
-  MEDAL_CREATED
-  MEDAL_UPDATED
-  MEDAL_REMOVED
-  MEDAL_APPROVED
-  MEDAL_ACCEPTED
-  MEDAL_GRANTED
-  MEDAL_DENIED
-  MEDAL_SELF_DELIVERY_BLOCKED
-  MEDAL_SELF_DELIVERY_ATTEMPT
-  TRANSCRIPT_CREATED
-  CONFIG_UPDATED
-  CATEGORY_CREATED
-  CATEGORY_UPDATED
-  CATEGORY_REMOVED
+  TICKET_CREATED TICKET_CLOSED TICKET_DELETED
+  MEDAL_CREATED MEDAL_UPDATED MEDAL_REMOVED MEDAL_APPROVED MEDAL_ACCEPTED MEDAL_GRANTED MEDAL_DENIED
+  MEDAL_SELF_DELIVERY_BLOCKED MEDAL_SELF_DELIVERY_ATTEMPT
+  TRANSCRIPT_CREATED CONFIG_UPDATED CATEGORY_CREATED CATEGORY_UPDATED CATEGORY_REMOVED
 }
