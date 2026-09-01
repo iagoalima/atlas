@@ -37,6 +37,10 @@ export type GuildConfigMinAggregateOutputType = {
   medalCatalogChannelId: string | null
   ticketPanelChannelId: string | null
   ticketPanelMessageId: string | null
+  solicitationChannelId: string | null
+  solicitationsOpen: boolean | null
+  solicitationNoticeMessageId: string | null
+  solicitationNoticeDeleteAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -54,6 +58,10 @@ export type GuildConfigMaxAggregateOutputType = {
   medalCatalogChannelId: string | null
   ticketPanelChannelId: string | null
   ticketPanelMessageId: string | null
+  solicitationChannelId: string | null
+  solicitationsOpen: boolean | null
+  solicitationNoticeMessageId: string | null
+  solicitationNoticeDeleteAt: Date | null
   createdAt: Date | null
   updatedAt: Date | null
 }
@@ -71,6 +79,10 @@ export type GuildConfigCountAggregateOutputType = {
   medalCatalogChannelId: number
   ticketPanelChannelId: number
   ticketPanelMessageId: number
+  solicitationChannelId: number
+  solicitationsOpen: number
+  solicitationNoticeMessageId: number
+  solicitationNoticeDeleteAt: number
   createdAt: number
   updatedAt: number
   _all: number
@@ -90,6 +102,10 @@ export type GuildConfigMinAggregateInputType = {
   medalCatalogChannelId?: true
   ticketPanelChannelId?: true
   ticketPanelMessageId?: true
+  solicitationChannelId?: true
+  solicitationsOpen?: true
+  solicitationNoticeMessageId?: true
+  solicitationNoticeDeleteAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -107,6 +123,10 @@ export type GuildConfigMaxAggregateInputType = {
   medalCatalogChannelId?: true
   ticketPanelChannelId?: true
   ticketPanelMessageId?: true
+  solicitationChannelId?: true
+  solicitationsOpen?: true
+  solicitationNoticeMessageId?: true
+  solicitationNoticeDeleteAt?: true
   createdAt?: true
   updatedAt?: true
 }
@@ -124,6 +144,10 @@ export type GuildConfigCountAggregateInputType = {
   medalCatalogChannelId?: true
   ticketPanelChannelId?: true
   ticketPanelMessageId?: true
+  solicitationChannelId?: true
+  solicitationsOpen?: true
+  solicitationNoticeMessageId?: true
+  solicitationNoticeDeleteAt?: true
   createdAt?: true
   updatedAt?: true
   _all?: true
@@ -214,6 +238,10 @@ export type GuildConfigGroupByOutputType = {
   medalCatalogChannelId: string | null
   ticketPanelChannelId: string | null
   ticketPanelMessageId: string | null
+  solicitationChannelId: string | null
+  solicitationsOpen: boolean
+  solicitationNoticeMessageId: string | null
+  solicitationNoticeDeleteAt: Date | null
   createdAt: Date
   updatedAt: Date
   _count: GuildConfigCountAggregateOutputType | null
@@ -252,6 +280,10 @@ export type GuildConfigWhereInput = {
   medalCatalogChannelId?: Prisma.StringNullableFilter<"GuildConfig"> | string | null
   ticketPanelChannelId?: Prisma.StringNullableFilter<"GuildConfig"> | string | null
   ticketPanelMessageId?: Prisma.StringNullableFilter<"GuildConfig"> | string | null
+  solicitationChannelId?: Prisma.StringNullableFilter<"GuildConfig"> | string | null
+  solicitationsOpen?: Prisma.BoolFilter<"GuildConfig"> | boolean
+  solicitationNoticeMessageId?: Prisma.StringNullableFilter<"GuildConfig"> | string | null
+  solicitationNoticeDeleteAt?: Prisma.DateTimeNullableFilter<"GuildConfig"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"GuildConfig"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GuildConfig"> | Date | string
 }
@@ -269,6 +301,10 @@ export type GuildConfigOrderByWithRelationInput = {
   medalCatalogChannelId?: Prisma.SortOrderInput | Prisma.SortOrder
   ticketPanelChannelId?: Prisma.SortOrderInput | Prisma.SortOrder
   ticketPanelMessageId?: Prisma.SortOrderInput | Prisma.SortOrder
+  solicitationChannelId?: Prisma.SortOrderInput | Prisma.SortOrder
+  solicitationsOpen?: Prisma.SortOrder
+  solicitationNoticeMessageId?: Prisma.SortOrderInput | Prisma.SortOrder
+  solicitationNoticeDeleteAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -289,6 +325,10 @@ export type GuildConfigWhereUniqueInput = Prisma.AtLeast<{
   medalCatalogChannelId?: Prisma.StringNullableFilter<"GuildConfig"> | string | null
   ticketPanelChannelId?: Prisma.StringNullableFilter<"GuildConfig"> | string | null
   ticketPanelMessageId?: Prisma.StringNullableFilter<"GuildConfig"> | string | null
+  solicitationChannelId?: Prisma.StringNullableFilter<"GuildConfig"> | string | null
+  solicitationsOpen?: Prisma.BoolFilter<"GuildConfig"> | boolean
+  solicitationNoticeMessageId?: Prisma.StringNullableFilter<"GuildConfig"> | string | null
+  solicitationNoticeDeleteAt?: Prisma.DateTimeNullableFilter<"GuildConfig"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"GuildConfig"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"GuildConfig"> | Date | string
 }, "id" | "requestGuildId">
@@ -306,6 +346,10 @@ export type GuildConfigOrderByWithAggregationInput = {
   medalCatalogChannelId?: Prisma.SortOrderInput | Prisma.SortOrder
   ticketPanelChannelId?: Prisma.SortOrderInput | Prisma.SortOrder
   ticketPanelMessageId?: Prisma.SortOrderInput | Prisma.SortOrder
+  solicitationChannelId?: Prisma.SortOrderInput | Prisma.SortOrder
+  solicitationsOpen?: Prisma.SortOrder
+  solicitationNoticeMessageId?: Prisma.SortOrderInput | Prisma.SortOrder
+  solicitationNoticeDeleteAt?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
   _count?: Prisma.GuildConfigCountOrderByAggregateInput
@@ -329,6 +373,10 @@ export type GuildConfigScalarWhereWithAggregatesInput = {
   medalCatalogChannelId?: Prisma.StringNullableWithAggregatesFilter<"GuildConfig"> | string | null
   ticketPanelChannelId?: Prisma.StringNullableWithAggregatesFilter<"GuildConfig"> | string | null
   ticketPanelMessageId?: Prisma.StringNullableWithAggregatesFilter<"GuildConfig"> | string | null
+  solicitationChannelId?: Prisma.StringNullableWithAggregatesFilter<"GuildConfig"> | string | null
+  solicitationsOpen?: Prisma.BoolWithAggregatesFilter<"GuildConfig"> | boolean
+  solicitationNoticeMessageId?: Prisma.StringNullableWithAggregatesFilter<"GuildConfig"> | string | null
+  solicitationNoticeDeleteAt?: Prisma.DateTimeNullableWithAggregatesFilter<"GuildConfig"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"GuildConfig"> | Date | string
   updatedAt?: Prisma.DateTimeWithAggregatesFilter<"GuildConfig"> | Date | string
 }
@@ -346,6 +394,10 @@ export type GuildConfigCreateInput = {
   medalCatalogChannelId?: string | null
   ticketPanelChannelId?: string | null
   ticketPanelMessageId?: string | null
+  solicitationChannelId?: string | null
+  solicitationsOpen?: boolean
+  solicitationNoticeMessageId?: string | null
+  solicitationNoticeDeleteAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -363,6 +415,10 @@ export type GuildConfigUncheckedCreateInput = {
   medalCatalogChannelId?: string | null
   ticketPanelChannelId?: string | null
   ticketPanelMessageId?: string | null
+  solicitationChannelId?: string | null
+  solicitationsOpen?: boolean
+  solicitationNoticeMessageId?: string | null
+  solicitationNoticeDeleteAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -380,6 +436,10 @@ export type GuildConfigUpdateInput = {
   medalCatalogChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ticketPanelChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ticketPanelMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationsOpen?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  solicitationNoticeMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationNoticeDeleteAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -397,6 +457,10 @@ export type GuildConfigUncheckedUpdateInput = {
   medalCatalogChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ticketPanelChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ticketPanelMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationsOpen?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  solicitationNoticeMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationNoticeDeleteAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -414,6 +478,10 @@ export type GuildConfigCreateManyInput = {
   medalCatalogChannelId?: string | null
   ticketPanelChannelId?: string | null
   ticketPanelMessageId?: string | null
+  solicitationChannelId?: string | null
+  solicitationsOpen?: boolean
+  solicitationNoticeMessageId?: string | null
+  solicitationNoticeDeleteAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
 }
@@ -431,6 +499,10 @@ export type GuildConfigUpdateManyMutationInput = {
   medalCatalogChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ticketPanelChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ticketPanelMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationsOpen?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  solicitationNoticeMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationNoticeDeleteAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -448,6 +520,10 @@ export type GuildConfigUncheckedUpdateManyInput = {
   medalCatalogChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ticketPanelChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   ticketPanelMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationChannelId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationsOpen?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  solicitationNoticeMessageId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  solicitationNoticeDeleteAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
@@ -465,6 +541,10 @@ export type GuildConfigCountOrderByAggregateInput = {
   medalCatalogChannelId?: Prisma.SortOrder
   ticketPanelChannelId?: Prisma.SortOrder
   ticketPanelMessageId?: Prisma.SortOrder
+  solicitationChannelId?: Prisma.SortOrder
+  solicitationsOpen?: Prisma.SortOrder
+  solicitationNoticeMessageId?: Prisma.SortOrder
+  solicitationNoticeDeleteAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -482,6 +562,10 @@ export type GuildConfigMaxOrderByAggregateInput = {
   medalCatalogChannelId?: Prisma.SortOrder
   ticketPanelChannelId?: Prisma.SortOrder
   ticketPanelMessageId?: Prisma.SortOrder
+  solicitationChannelId?: Prisma.SortOrder
+  solicitationsOpen?: Prisma.SortOrder
+  solicitationNoticeMessageId?: Prisma.SortOrder
+  solicitationNoticeDeleteAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -499,6 +583,10 @@ export type GuildConfigMinOrderByAggregateInput = {
   medalCatalogChannelId?: Prisma.SortOrder
   ticketPanelChannelId?: Prisma.SortOrder
   ticketPanelMessageId?: Prisma.SortOrder
+  solicitationChannelId?: Prisma.SortOrder
+  solicitationsOpen?: Prisma.SortOrder
+  solicitationNoticeMessageId?: Prisma.SortOrder
+  solicitationNoticeDeleteAt?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   updatedAt?: Prisma.SortOrder
 }
@@ -509,6 +597,14 @@ export type StringFieldUpdateOperationsInput = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -530,6 +626,10 @@ export type GuildConfigSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   medalCatalogChannelId?: boolean
   ticketPanelChannelId?: boolean
   ticketPanelMessageId?: boolean
+  solicitationChannelId?: boolean
+  solicitationsOpen?: boolean
+  solicitationNoticeMessageId?: boolean
+  solicitationNoticeDeleteAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["guildConfig"]>
@@ -547,6 +647,10 @@ export type GuildConfigSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   medalCatalogChannelId?: boolean
   ticketPanelChannelId?: boolean
   ticketPanelMessageId?: boolean
+  solicitationChannelId?: boolean
+  solicitationsOpen?: boolean
+  solicitationNoticeMessageId?: boolean
+  solicitationNoticeDeleteAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["guildConfig"]>
@@ -564,6 +668,10 @@ export type GuildConfigSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   medalCatalogChannelId?: boolean
   ticketPanelChannelId?: boolean
   ticketPanelMessageId?: boolean
+  solicitationChannelId?: boolean
+  solicitationsOpen?: boolean
+  solicitationNoticeMessageId?: boolean
+  solicitationNoticeDeleteAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }, ExtArgs["result"]["guildConfig"]>
@@ -581,11 +689,15 @@ export type GuildConfigSelectScalar = {
   medalCatalogChannelId?: boolean
   ticketPanelChannelId?: boolean
   ticketPanelMessageId?: boolean
+  solicitationChannelId?: boolean
+  solicitationsOpen?: boolean
+  solicitationNoticeMessageId?: boolean
+  solicitationNoticeDeleteAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
 }
 
-export type GuildConfigOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "requestGuildId" | "deliveryGuildId" | "ticketCategoryId" | "logChannelId" | "transcriptChannelId" | "staffRoleId" | "responsibleRoleId" | "medalCatalogMessageId" | "medalCatalogChannelId" | "ticketPanelChannelId" | "ticketPanelMessageId" | "createdAt" | "updatedAt", ExtArgs["result"]["guildConfig"]>
+export type GuildConfigOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "requestGuildId" | "deliveryGuildId" | "ticketCategoryId" | "logChannelId" | "transcriptChannelId" | "staffRoleId" | "responsibleRoleId" | "medalCatalogMessageId" | "medalCatalogChannelId" | "ticketPanelChannelId" | "ticketPanelMessageId" | "solicitationChannelId" | "solicitationsOpen" | "solicitationNoticeMessageId" | "solicitationNoticeDeleteAt" | "createdAt" | "updatedAt", ExtArgs["result"]["guildConfig"]>
 
 export type $GuildConfigPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "GuildConfig"
@@ -603,6 +715,10 @@ export type $GuildConfigPayload<ExtArgs extends runtime.Types.Extensions.Interna
     medalCatalogChannelId: string | null
     ticketPanelChannelId: string | null
     ticketPanelMessageId: string | null
+    solicitationChannelId: string | null
+    solicitationsOpen: boolean
+    solicitationNoticeMessageId: string | null
+    solicitationNoticeDeleteAt: Date | null
     createdAt: Date
     updatedAt: Date
   }, ExtArgs["result"]["guildConfig"]>
@@ -1040,6 +1156,10 @@ export interface GuildConfigFieldRefs {
   readonly medalCatalogChannelId: Prisma.FieldRef<"GuildConfig", 'String'>
   readonly ticketPanelChannelId: Prisma.FieldRef<"GuildConfig", 'String'>
   readonly ticketPanelMessageId: Prisma.FieldRef<"GuildConfig", 'String'>
+  readonly solicitationChannelId: Prisma.FieldRef<"GuildConfig", 'String'>
+  readonly solicitationsOpen: Prisma.FieldRef<"GuildConfig", 'Boolean'>
+  readonly solicitationNoticeMessageId: Prisma.FieldRef<"GuildConfig", 'String'>
+  readonly solicitationNoticeDeleteAt: Prisma.FieldRef<"GuildConfig", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"GuildConfig", 'DateTime'>
   readonly updatedAt: Prisma.FieldRef<"GuildConfig", 'DateTime'>
 }

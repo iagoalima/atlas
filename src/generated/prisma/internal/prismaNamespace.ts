@@ -1368,6 +1368,10 @@ export const GuildConfigScalarFieldEnum = {
   medalCatalogChannelId: 'medalCatalogChannelId',
   ticketPanelChannelId: 'ticketPanelChannelId',
   ticketPanelMessageId: 'ticketPanelMessageId',
+  solicitationChannelId: 'solicitationChannelId',
+  solicitationsOpen: 'solicitationsOpen',
+  solicitationNoticeMessageId: 'solicitationNoticeMessageId',
+  solicitationNoticeDeleteAt: 'solicitationNoticeDeleteAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1448,6 +1452,8 @@ export const TicketScalarFieldEnum = {
   staffId: 'staffId',
   reason: 'reason',
   proofsSubmittedAt: 'proofsSubmittedAt',
+  submittedAt: 'submittedAt',
+  teamMessageId: 'teamMessageId',
   createdAt: 'createdAt',
   closedAt: 'closedAt'
 } as const
@@ -1458,6 +1464,8 @@ export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof 
 export const TicketProofScalarFieldEnum = {
   id: 'id',
   ticketId: 'ticketId',
+  ticketMedalId: 'ticketMedalId',
+  medalId: 'medalId',
   userId: 'userId',
   messageId: 'messageId',
   channelId: 'channelId',
@@ -1579,6 +1587,13 @@ export type ListStringFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaMod
 
 
 /**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
  * Reference to a field of type 'DateTime'
  */
 export type DateTimeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'DateTime'>
@@ -1603,13 +1618,6 @@ export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'In
  * Reference to a field of type 'Int[]'
  */
 export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-/**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
