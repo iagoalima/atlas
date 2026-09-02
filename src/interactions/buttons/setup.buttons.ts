@@ -47,5 +47,5 @@ export async function handleSetupDeliveryGuildModal(interaction: ModalSubmitInte
     return;
   }
   updateSetupData(interaction.guild.id, { deliveryGuildId });
-  await interaction.reply({ content: `## 🏰 Servidor de entrega atualizado\n\n**Servidor:** ${deliveryGuild.name}\n**ID:** \`${deliveryGuild.id}\`\n\nSalve o `/setup` para confirmar.`, flags: MessageFlags.Ephemeral });
+  await interaction.reply({ content: `## 🏰 Servidor de entrega atualizado\n\n**Servidor:** ${deliveryGuild.name}\n**ID:** \`${deliveryGuild.id}\`\n\nSalve o \`/setup\` para confirmar.`, flags: MessageFlags.Ephemeral });
 }
