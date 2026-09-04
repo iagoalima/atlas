@@ -94,6 +94,10 @@ export const GuildConfigScalarFieldEnum = {
   medalCatalogChannelId: 'medalCatalogChannelId',
   ticketPanelChannelId: 'ticketPanelChannelId',
   ticketPanelMessageId: 'ticketPanelMessageId',
+  solicitationChannelId: 'solicitationChannelId',
+  solicitationsOpen: 'solicitationsOpen',
+  solicitationNoticeMessageId: 'solicitationNoticeMessageId',
+  solicitationNoticeDeleteAt: 'solicitationNoticeDeleteAt',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -174,6 +178,8 @@ export const TicketScalarFieldEnum = {
   staffId: 'staffId',
   reason: 'reason',
   proofsSubmittedAt: 'proofsSubmittedAt',
+  submittedAt: 'submittedAt',
+  teamMessageId: 'teamMessageId',
   createdAt: 'createdAt',
   closedAt: 'closedAt'
 } as const
@@ -184,6 +190,8 @@ export type TicketScalarFieldEnum = (typeof TicketScalarFieldEnum)[keyof typeof 
 export const TicketProofScalarFieldEnum = {
   id: 'id',
   ticketId: 'ticketId',
+  ticketMedalId: 'ticketMedalId',
+  medalId: 'medalId',
   userId: 'userId',
   messageId: 'messageId',
   channelId: 'channelId',

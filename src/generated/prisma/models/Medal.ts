@@ -227,6 +227,7 @@ export type MedalWhereInput = {
   approvalRoles?: Prisma.MedalApprovalRoleListRelationFilter
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleListRelationFilter
   tickets?: Prisma.TicketMedalListRelationFilter
+  proofItems?: Prisma.TicketProofListRelationFilter
 }
 
 export type MedalOrderByWithRelationInput = {
@@ -245,6 +246,7 @@ export type MedalOrderByWithRelationInput = {
   approvalRoles?: Prisma.MedalApprovalRoleOrderByRelationAggregateInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleOrderByRelationAggregateInput
   tickets?: Prisma.TicketMedalOrderByRelationAggregateInput
+  proofItems?: Prisma.TicketProofOrderByRelationAggregateInput
 }
 
 export type MedalWhereUniqueInput = Prisma.AtLeast<{
@@ -266,6 +268,7 @@ export type MedalWhereUniqueInput = Prisma.AtLeast<{
   approvalRoles?: Prisma.MedalApprovalRoleListRelationFilter
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleListRelationFilter
   tickets?: Prisma.TicketMedalListRelationFilter
+  proofItems?: Prisma.TicketProofListRelationFilter
 }, "id">
 
 export type MedalOrderByWithAggregationInput = {
@@ -315,6 +318,7 @@ export type MedalCreateInput = {
   approvalRoles?: Prisma.MedalApprovalRoleCreateNestedManyWithoutMedalInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleCreateNestedManyWithoutMedalInput
   tickets?: Prisma.TicketMedalCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofCreateNestedManyWithoutMedalInput
 }
 
 export type MedalUncheckedCreateInput = {
@@ -332,6 +336,7 @@ export type MedalUncheckedCreateInput = {
   approvalRoles?: Prisma.MedalApprovalRoleUncheckedCreateNestedManyWithoutMedalInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedCreateNestedManyWithoutMedalInput
   tickets?: Prisma.TicketMedalUncheckedCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofUncheckedCreateNestedManyWithoutMedalInput
 }
 
 export type MedalUpdateInput = {
@@ -349,6 +354,7 @@ export type MedalUpdateInput = {
   approvalRoles?: Prisma.MedalApprovalRoleUpdateManyWithoutMedalNestedInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUpdateManyWithoutMedalNestedInput
   tickets?: Prisma.TicketMedalUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUpdateManyWithoutMedalNestedInput
 }
 
 export type MedalUncheckedUpdateInput = {
@@ -366,6 +372,7 @@ export type MedalUncheckedUpdateInput = {
   approvalRoles?: Prisma.MedalApprovalRoleUncheckedUpdateManyWithoutMedalNestedInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedUpdateManyWithoutMedalNestedInput
   tickets?: Prisma.TicketMedalUncheckedUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUncheckedUpdateManyWithoutMedalNestedInput
 }
 
 export type MedalCreateManyInput = {
@@ -460,6 +467,11 @@ export type MedalScalarRelationFilter = {
   isNot?: Prisma.MedalWhereInput
 }
 
+export type MedalNullableScalarRelationFilter = {
+  is?: Prisma.MedalWhereInput | null
+  isNot?: Prisma.MedalWhereInput | null
+}
+
 export type MedalCreateNestedManyWithoutCategoryInput = {
   create?: Prisma.XOR<Prisma.MedalCreateWithoutCategoryInput, Prisma.MedalUncheckedCreateWithoutCategoryInput> | Prisma.MedalCreateWithoutCategoryInput[] | Prisma.MedalUncheckedCreateWithoutCategoryInput[]
   connectOrCreate?: Prisma.MedalCreateOrConnectWithoutCategoryInput | Prisma.MedalCreateOrConnectWithoutCategoryInput[]
@@ -544,6 +556,22 @@ export type MedalUpdateOneRequiredWithoutDeliveryPermissionRolesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.MedalUpdateToOneWithWhereWithoutDeliveryPermissionRolesInput, Prisma.MedalUpdateWithoutDeliveryPermissionRolesInput>, Prisma.MedalUncheckedUpdateWithoutDeliveryPermissionRolesInput>
 }
 
+export type MedalCreateNestedOneWithoutProofItemsInput = {
+  create?: Prisma.XOR<Prisma.MedalCreateWithoutProofItemsInput, Prisma.MedalUncheckedCreateWithoutProofItemsInput>
+  connectOrCreate?: Prisma.MedalCreateOrConnectWithoutProofItemsInput
+  connect?: Prisma.MedalWhereUniqueInput
+}
+
+export type MedalUpdateOneWithoutProofItemsNestedInput = {
+  create?: Prisma.XOR<Prisma.MedalCreateWithoutProofItemsInput, Prisma.MedalUncheckedCreateWithoutProofItemsInput>
+  connectOrCreate?: Prisma.MedalCreateOrConnectWithoutProofItemsInput
+  upsert?: Prisma.MedalUpsertWithoutProofItemsInput
+  disconnect?: Prisma.MedalWhereInput | boolean
+  delete?: Prisma.MedalWhereInput | boolean
+  connect?: Prisma.MedalWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.MedalUpdateToOneWithWhereWithoutProofItemsInput, Prisma.MedalUpdateWithoutProofItemsInput>, Prisma.MedalUncheckedUpdateWithoutProofItemsInput>
+}
+
 export type MedalCreateNestedOneWithoutTicketsInput = {
   create?: Prisma.XOR<Prisma.MedalCreateWithoutTicketsInput, Prisma.MedalUncheckedCreateWithoutTicketsInput>
   connectOrCreate?: Prisma.MedalCreateOrConnectWithoutTicketsInput
@@ -572,6 +600,7 @@ export type MedalCreateWithoutCategoryInput = {
   approvalRoles?: Prisma.MedalApprovalRoleCreateNestedManyWithoutMedalInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleCreateNestedManyWithoutMedalInput
   tickets?: Prisma.TicketMedalCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofCreateNestedManyWithoutMedalInput
 }
 
 export type MedalUncheckedCreateWithoutCategoryInput = {
@@ -588,6 +617,7 @@ export type MedalUncheckedCreateWithoutCategoryInput = {
   approvalRoles?: Prisma.MedalApprovalRoleUncheckedCreateNestedManyWithoutMedalInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedCreateNestedManyWithoutMedalInput
   tickets?: Prisma.TicketMedalUncheckedCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofUncheckedCreateNestedManyWithoutMedalInput
 }
 
 export type MedalCreateOrConnectWithoutCategoryInput = {
@@ -646,6 +676,7 @@ export type MedalCreateWithoutDeliveryRolesInput = {
   approvalRoles?: Prisma.MedalApprovalRoleCreateNestedManyWithoutMedalInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleCreateNestedManyWithoutMedalInput
   tickets?: Prisma.TicketMedalCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofCreateNestedManyWithoutMedalInput
 }
 
 export type MedalUncheckedCreateWithoutDeliveryRolesInput = {
@@ -662,6 +693,7 @@ export type MedalUncheckedCreateWithoutDeliveryRolesInput = {
   approvalRoles?: Prisma.MedalApprovalRoleUncheckedCreateNestedManyWithoutMedalInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedCreateNestedManyWithoutMedalInput
   tickets?: Prisma.TicketMedalUncheckedCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofUncheckedCreateNestedManyWithoutMedalInput
 }
 
 export type MedalCreateOrConnectWithoutDeliveryRolesInput = {
@@ -694,6 +726,7 @@ export type MedalUpdateWithoutDeliveryRolesInput = {
   approvalRoles?: Prisma.MedalApprovalRoleUpdateManyWithoutMedalNestedInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUpdateManyWithoutMedalNestedInput
   tickets?: Prisma.TicketMedalUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUpdateManyWithoutMedalNestedInput
 }
 
 export type MedalUncheckedUpdateWithoutDeliveryRolesInput = {
@@ -710,6 +743,7 @@ export type MedalUncheckedUpdateWithoutDeliveryRolesInput = {
   approvalRoles?: Prisma.MedalApprovalRoleUncheckedUpdateManyWithoutMedalNestedInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedUpdateManyWithoutMedalNestedInput
   tickets?: Prisma.TicketMedalUncheckedUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUncheckedUpdateManyWithoutMedalNestedInput
 }
 
 export type MedalCreateWithoutApprovalRolesInput = {
@@ -726,6 +760,7 @@ export type MedalCreateWithoutApprovalRolesInput = {
   deliveryRoles?: Prisma.MedalRoleCreateNestedManyWithoutMedalInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleCreateNestedManyWithoutMedalInput
   tickets?: Prisma.TicketMedalCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofCreateNestedManyWithoutMedalInput
 }
 
 export type MedalUncheckedCreateWithoutApprovalRolesInput = {
@@ -742,6 +777,7 @@ export type MedalUncheckedCreateWithoutApprovalRolesInput = {
   deliveryRoles?: Prisma.MedalRoleUncheckedCreateNestedManyWithoutMedalInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedCreateNestedManyWithoutMedalInput
   tickets?: Prisma.TicketMedalUncheckedCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofUncheckedCreateNestedManyWithoutMedalInput
 }
 
 export type MedalCreateOrConnectWithoutApprovalRolesInput = {
@@ -774,6 +810,7 @@ export type MedalUpdateWithoutApprovalRolesInput = {
   deliveryRoles?: Prisma.MedalRoleUpdateManyWithoutMedalNestedInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUpdateManyWithoutMedalNestedInput
   tickets?: Prisma.TicketMedalUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUpdateManyWithoutMedalNestedInput
 }
 
 export type MedalUncheckedUpdateWithoutApprovalRolesInput = {
@@ -790,6 +827,7 @@ export type MedalUncheckedUpdateWithoutApprovalRolesInput = {
   deliveryRoles?: Prisma.MedalRoleUncheckedUpdateManyWithoutMedalNestedInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedUpdateManyWithoutMedalNestedInput
   tickets?: Prisma.TicketMedalUncheckedUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUncheckedUpdateManyWithoutMedalNestedInput
 }
 
 export type MedalCreateWithoutDeliveryPermissionRolesInput = {
@@ -806,6 +844,7 @@ export type MedalCreateWithoutDeliveryPermissionRolesInput = {
   deliveryRoles?: Prisma.MedalRoleCreateNestedManyWithoutMedalInput
   approvalRoles?: Prisma.MedalApprovalRoleCreateNestedManyWithoutMedalInput
   tickets?: Prisma.TicketMedalCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofCreateNestedManyWithoutMedalInput
 }
 
 export type MedalUncheckedCreateWithoutDeliveryPermissionRolesInput = {
@@ -822,6 +861,7 @@ export type MedalUncheckedCreateWithoutDeliveryPermissionRolesInput = {
   deliveryRoles?: Prisma.MedalRoleUncheckedCreateNestedManyWithoutMedalInput
   approvalRoles?: Prisma.MedalApprovalRoleUncheckedCreateNestedManyWithoutMedalInput
   tickets?: Prisma.TicketMedalUncheckedCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofUncheckedCreateNestedManyWithoutMedalInput
 }
 
 export type MedalCreateOrConnectWithoutDeliveryPermissionRolesInput = {
@@ -854,6 +894,7 @@ export type MedalUpdateWithoutDeliveryPermissionRolesInput = {
   deliveryRoles?: Prisma.MedalRoleUpdateManyWithoutMedalNestedInput
   approvalRoles?: Prisma.MedalApprovalRoleUpdateManyWithoutMedalNestedInput
   tickets?: Prisma.TicketMedalUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUpdateManyWithoutMedalNestedInput
 }
 
 export type MedalUncheckedUpdateWithoutDeliveryPermissionRolesInput = {
@@ -869,6 +910,91 @@ export type MedalUncheckedUpdateWithoutDeliveryPermissionRolesInput = {
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   deliveryRoles?: Prisma.MedalRoleUncheckedUpdateManyWithoutMedalNestedInput
   approvalRoles?: Prisma.MedalApprovalRoleUncheckedUpdateManyWithoutMedalNestedInput
+  tickets?: Prisma.TicketMedalUncheckedUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUncheckedUpdateManyWithoutMedalNestedInput
+}
+
+export type MedalCreateWithoutProofItemsInput = {
+  id?: string
+  name: string
+  requirements: string
+  jurisprudence?: string | null
+  emoji?: string | null
+  color?: string | null
+  active?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  category: Prisma.MedalCategoryCreateNestedOneWithoutMedalsInput
+  deliveryRoles?: Prisma.MedalRoleCreateNestedManyWithoutMedalInput
+  approvalRoles?: Prisma.MedalApprovalRoleCreateNestedManyWithoutMedalInput
+  deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleCreateNestedManyWithoutMedalInput
+  tickets?: Prisma.TicketMedalCreateNestedManyWithoutMedalInput
+}
+
+export type MedalUncheckedCreateWithoutProofItemsInput = {
+  id?: string
+  name: string
+  requirements: string
+  jurisprudence?: string | null
+  emoji?: string | null
+  color?: string | null
+  categoryId: string
+  active?: boolean
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  deliveryRoles?: Prisma.MedalRoleUncheckedCreateNestedManyWithoutMedalInput
+  approvalRoles?: Prisma.MedalApprovalRoleUncheckedCreateNestedManyWithoutMedalInput
+  deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedCreateNestedManyWithoutMedalInput
+  tickets?: Prisma.TicketMedalUncheckedCreateNestedManyWithoutMedalInput
+}
+
+export type MedalCreateOrConnectWithoutProofItemsInput = {
+  where: Prisma.MedalWhereUniqueInput
+  create: Prisma.XOR<Prisma.MedalCreateWithoutProofItemsInput, Prisma.MedalUncheckedCreateWithoutProofItemsInput>
+}
+
+export type MedalUpsertWithoutProofItemsInput = {
+  update: Prisma.XOR<Prisma.MedalUpdateWithoutProofItemsInput, Prisma.MedalUncheckedUpdateWithoutProofItemsInput>
+  create: Prisma.XOR<Prisma.MedalCreateWithoutProofItemsInput, Prisma.MedalUncheckedCreateWithoutProofItemsInput>
+  where?: Prisma.MedalWhereInput
+}
+
+export type MedalUpdateToOneWithWhereWithoutProofItemsInput = {
+  where?: Prisma.MedalWhereInput
+  data: Prisma.XOR<Prisma.MedalUpdateWithoutProofItemsInput, Prisma.MedalUncheckedUpdateWithoutProofItemsInput>
+}
+
+export type MedalUpdateWithoutProofItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  requirements?: Prisma.StringFieldUpdateOperationsInput | string
+  jurisprudence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  category?: Prisma.MedalCategoryUpdateOneRequiredWithoutMedalsNestedInput
+  deliveryRoles?: Prisma.MedalRoleUpdateManyWithoutMedalNestedInput
+  approvalRoles?: Prisma.MedalApprovalRoleUpdateManyWithoutMedalNestedInput
+  deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUpdateManyWithoutMedalNestedInput
+  tickets?: Prisma.TicketMedalUpdateManyWithoutMedalNestedInput
+}
+
+export type MedalUncheckedUpdateWithoutProofItemsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  requirements?: Prisma.StringFieldUpdateOperationsInput | string
+  jurisprudence?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  emoji?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  color?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  categoryId?: Prisma.StringFieldUpdateOperationsInput | string
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  deliveryRoles?: Prisma.MedalRoleUncheckedUpdateManyWithoutMedalNestedInput
+  approvalRoles?: Prisma.MedalApprovalRoleUncheckedUpdateManyWithoutMedalNestedInput
+  deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedUpdateManyWithoutMedalNestedInput
   tickets?: Prisma.TicketMedalUncheckedUpdateManyWithoutMedalNestedInput
 }
 
@@ -886,6 +1012,7 @@ export type MedalCreateWithoutTicketsInput = {
   deliveryRoles?: Prisma.MedalRoleCreateNestedManyWithoutMedalInput
   approvalRoles?: Prisma.MedalApprovalRoleCreateNestedManyWithoutMedalInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofCreateNestedManyWithoutMedalInput
 }
 
 export type MedalUncheckedCreateWithoutTicketsInput = {
@@ -902,6 +1029,7 @@ export type MedalUncheckedCreateWithoutTicketsInput = {
   deliveryRoles?: Prisma.MedalRoleUncheckedCreateNestedManyWithoutMedalInput
   approvalRoles?: Prisma.MedalApprovalRoleUncheckedCreateNestedManyWithoutMedalInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedCreateNestedManyWithoutMedalInput
+  proofItems?: Prisma.TicketProofUncheckedCreateNestedManyWithoutMedalInput
 }
 
 export type MedalCreateOrConnectWithoutTicketsInput = {
@@ -934,6 +1062,7 @@ export type MedalUpdateWithoutTicketsInput = {
   deliveryRoles?: Prisma.MedalRoleUpdateManyWithoutMedalNestedInput
   approvalRoles?: Prisma.MedalApprovalRoleUpdateManyWithoutMedalNestedInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUpdateManyWithoutMedalNestedInput
 }
 
 export type MedalUncheckedUpdateWithoutTicketsInput = {
@@ -950,6 +1079,7 @@ export type MedalUncheckedUpdateWithoutTicketsInput = {
   deliveryRoles?: Prisma.MedalRoleUncheckedUpdateManyWithoutMedalNestedInput
   approvalRoles?: Prisma.MedalApprovalRoleUncheckedUpdateManyWithoutMedalNestedInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUncheckedUpdateManyWithoutMedalNestedInput
 }
 
 export type MedalCreateManyCategoryInput = {
@@ -978,6 +1108,7 @@ export type MedalUpdateWithoutCategoryInput = {
   approvalRoles?: Prisma.MedalApprovalRoleUpdateManyWithoutMedalNestedInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUpdateManyWithoutMedalNestedInput
   tickets?: Prisma.TicketMedalUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUpdateManyWithoutMedalNestedInput
 }
 
 export type MedalUncheckedUpdateWithoutCategoryInput = {
@@ -994,6 +1125,7 @@ export type MedalUncheckedUpdateWithoutCategoryInput = {
   approvalRoles?: Prisma.MedalApprovalRoleUncheckedUpdateManyWithoutMedalNestedInput
   deliveryPermissionRoles?: Prisma.MedalDeliveryPermissionRoleUncheckedUpdateManyWithoutMedalNestedInput
   tickets?: Prisma.TicketMedalUncheckedUpdateManyWithoutMedalNestedInput
+  proofItems?: Prisma.TicketProofUncheckedUpdateManyWithoutMedalNestedInput
 }
 
 export type MedalUncheckedUpdateManyWithoutCategoryInput = {
@@ -1018,6 +1150,7 @@ export type MedalCountOutputType = {
   approvalRoles: number
   deliveryPermissionRoles: number
   tickets: number
+  proofItems: number
 }
 
 export type MedalCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1025,6 +1158,7 @@ export type MedalCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.
   approvalRoles?: boolean | MedalCountOutputTypeCountApprovalRolesArgs
   deliveryPermissionRoles?: boolean | MedalCountOutputTypeCountDeliveryPermissionRolesArgs
   tickets?: boolean | MedalCountOutputTypeCountTicketsArgs
+  proofItems?: boolean | MedalCountOutputTypeCountProofItemsArgs
 }
 
 /**
@@ -1065,6 +1199,13 @@ export type MedalCountOutputTypeCountTicketsArgs<ExtArgs extends runtime.Types.E
   where?: Prisma.TicketMedalWhereInput
 }
 
+/**
+ * MedalCountOutputType without action
+ */
+export type MedalCountOutputTypeCountProofItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.TicketProofWhereInput
+}
+
 
 export type MedalSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -1082,6 +1223,7 @@ export type MedalSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   approvalRoles?: boolean | Prisma.Medal$approvalRolesArgs<ExtArgs>
   deliveryPermissionRoles?: boolean | Prisma.Medal$deliveryPermissionRolesArgs<ExtArgs>
   tickets?: boolean | Prisma.Medal$ticketsArgs<ExtArgs>
+  proofItems?: boolean | Prisma.Medal$proofItemsArgs<ExtArgs>
   _count?: boolean | Prisma.MedalCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["medal"]>
 
@@ -1133,6 +1275,7 @@ export type MedalInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   approvalRoles?: boolean | Prisma.Medal$approvalRolesArgs<ExtArgs>
   deliveryPermissionRoles?: boolean | Prisma.Medal$deliveryPermissionRolesArgs<ExtArgs>
   tickets?: boolean | Prisma.Medal$ticketsArgs<ExtArgs>
+  proofItems?: boolean | Prisma.Medal$proofItemsArgs<ExtArgs>
   _count?: boolean | Prisma.MedalCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type MedalIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -1150,6 +1293,7 @@ export type $MedalPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     approvalRoles: Prisma.$MedalApprovalRolePayload<ExtArgs>[]
     deliveryPermissionRoles: Prisma.$MedalDeliveryPermissionRolePayload<ExtArgs>[]
     tickets: Prisma.$TicketMedalPayload<ExtArgs>[]
+    proofItems: Prisma.$TicketProofPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -1561,6 +1705,7 @@ export interface Prisma__MedalClient<T, Null = never, ExtArgs extends runtime.Ty
   approvalRoles<T extends Prisma.Medal$approvalRolesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Medal$approvalRolesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MedalApprovalRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   deliveryPermissionRoles<T extends Prisma.Medal$deliveryPermissionRolesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Medal$deliveryPermissionRolesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$MedalDeliveryPermissionRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   tickets<T extends Prisma.Medal$ticketsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Medal$ticketsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketMedalPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  proofItems<T extends Prisma.Medal$proofItemsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Medal$proofItemsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$TicketProofPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2094,6 +2239,30 @@ export type Medal$ticketsArgs<ExtArgs extends runtime.Types.Extensions.InternalA
   take?: number
   skip?: number
   distinct?: Prisma.TicketMedalScalarFieldEnum | Prisma.TicketMedalScalarFieldEnum[]
+}
+
+/**
+ * Medal.proofItems
+ */
+export type Medal$proofItemsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the TicketProof
+   */
+  select?: Prisma.TicketProofSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the TicketProof
+   */
+  omit?: Prisma.TicketProofOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.TicketProofInclude<ExtArgs> | null
+  where?: Prisma.TicketProofWhereInput
+  orderBy?: Prisma.TicketProofOrderByWithRelationInput | Prisma.TicketProofOrderByWithRelationInput[]
+  cursor?: Prisma.TicketProofWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.TicketProofScalarFieldEnum | Prisma.TicketProofScalarFieldEnum[]
 }
 
 /**
