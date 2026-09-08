@@ -6,12 +6,31 @@ import { installInteractionMessageStyle } from "../ui/interaction-messages.js";
 import { handleRequestButton, handleRequestMessage, handleRequestModal, handleRequestSelect, handleProofView } from "../services/request-flow.service.js";
 import { handleProofUploadButton } from "../services/request-proof-button.service.js";
 import { handleSeasonalReviewButton, handleSeasonalReviewModal } from "../services/request-review.service.js";
+import { refreshLatestSeasonalReviewPanel } from "../services/request-review-panel.service.js";
 import { startRequestNotifications } from "../services/request-notification.service.js";
 
 client.once("clientReady", (bot) => console.log(`Atlas conectado como ${bot.user.tag}`));
 client.on("messageCreate", async (message) => {
   try {
-    if (await handleRequestMessage(message)) return;
+    const handledRequest = await handleRequestMessage(message);
+    if (handledRequest) {
+      if (!message.guild) {
+        const ticket = await (await import("../infrastructure/database/prisma.js")).prisma.ticket.findFirst({
+          where: { userId: message.author.id, status: "OPEN", requestGuildId: { not: null } },
+          orderBy: { createdAt: "desc" },
+        });
+        if (ticket?.requestGuildId) {
+          const config = await (await import("../infrastructure/database/prisma.js")).prisma.guildConfig.findUnique({
+            where: { requestGuildId: ticket.requestGuildId },
+            select: { requestReviewChannelId: true },
+          });
+          if (config?.requestReviewChannelId) {
+            await refreshLatestSeasonalReviewPanel(message.client, ticket.id, config.requestReviewChannelId);
+          }
+        }
+      }
+      return;
+    }
     if (message.guild) {
       const { handleTicketMessage } = await import("../interactions/messages/ticket.messages.js");
       await handleTicketMessage(message);
