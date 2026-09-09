@@ -199,9 +199,20 @@ export async function publishAnalysisDashboard(
     );
   }
 
-  const container = await buildAnalysisDashboard(guild);
+  const config = await prisma.guildConfig.findUnique({
+    where: {
+      requestGuildId: guild.id,
+    },
+  });
 
-  const message = await channel.send({
+  if (!config) {
+    throw new Error("O servidor ainda não possui configuração do Atlas.");
+  }
+
+  const container = await buildAnalysisDashboard(guild);
+  const payload = {
+    content: null,
+    embeds: [],
     components: [container],
     files: [
       {
@@ -210,6 +221,39 @@ export async function publishAnalysisDashboard(
       },
     ],
     flags: MessageFlags.IsComponentsV2,
+  };
+
+  if (config.dashboardMessageId) {
+    const existing = await channel.messages
+      .fetch(config.dashboardMessageId)
+      .catch(() => null);
+
+    if (existing) {
+      await existing.edit(payload);
+
+      await prisma.guildConfig.update({
+        where: {
+          requestGuildId: guild.id,
+        },
+        data: {
+          dashboardChannelId: channel.id,
+        },
+      });
+
+      return existing.id;
+    }
+  }
+
+  const message = await channel.send(payload);
+
+  await prisma.guildConfig.update({
+    where: {
+      requestGuildId: guild.id,
+    },
+    data: {
+      dashboardChannelId: channel.id,
+      dashboardMessageId: message.id,
+    },
   });
 
   return message.id;
