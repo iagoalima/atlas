@@ -43,7 +43,7 @@ export async function buildAnalysisDashboard(guild: Guild): Promise<ContainerBui
   }
 
   container.addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small));
-  container.addTextDisplayComponents(new TextDisplayBuilder().setContent("-# Atlas • Central Interna de Análise • Atualize o painel para consultar os dados mais recentes."));
+  container.addTextDisplayComponents(new TextDisplayBuilder().setContent("-# Atlas • Central Interna de Análise • Atualização automática ativada."));
   return container;
 }
 
@@ -64,4 +64,20 @@ export async function publishAnalysisDashboard(guild: Guild, channelId: string):
   const message = await channel.send(payload);
   await prisma.guildConfig.update({ where: { requestGuildId: guild.id }, data: { dashboardChannelId: channel.id, dashboardMessageId: message.id } });
   return message.id;
+}
+
+/** Atualiza a Central de Análise quando ela estiver configurada. */
+export async function refreshAnalysisDashboard(guild: Guild): Promise<void> {
+  const config = await prisma.guildConfig.findUnique({
+    where: { requestGuildId: guild.id },
+    select: { dashboardChannelId: true },
+  });
+
+  if (!config?.dashboardChannelId) return;
+
+  try {
+    await publishAnalysisDashboard(guild, config.dashboardChannelId);
+  } catch (error) {
+    console.error("❌ [ATLAS DASHBOARD] Atualização automática falhou:", error);
+  }
 }
