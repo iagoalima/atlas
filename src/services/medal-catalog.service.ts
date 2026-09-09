@@ -7,12 +7,14 @@ import {
   TextChannel,
   TextDisplayBuilder,
 } from "discord.js";
+import path from "node:path";
 
 import { prisma } from "../infrastructure/database/prisma.js";
 
-// ==========================================================
-// FORMATA DATA
-// ==========================================================
+const BANNER_PATH = path.resolve(
+  process.cwd(),
+  "assets/panels/catalogo.png"
+);
 
 function formatDate(date: Date): string {
   return date.toLocaleString("pt-BR", {
@@ -25,17 +27,9 @@ function formatDate(date: Date): string {
   });
 }
 
-// ==========================================================
-// LIMPA TEXTO
-// ==========================================================
-
 function cleanText(text: string): string {
   return text.trim();
 }
-
-// ==========================================================
-// OBTÉM MENÇÕES DOS CARGOS AUTORIZADOS PARA ENTREGA
-// ==========================================================
 
 function buildDeliveryPermissionRoles(
   guild: Guild,
@@ -58,10 +52,6 @@ function buildDeliveryPermissionRoles(
     .join(" • ");
 }
 
-// ==========================================================
-// CONVERTE COR HEX PARA NÚMERO
-// ==========================================================
-
 function hexToNumber(hex: string): number | null {
   const normalized = hex.replace("#", "").trim();
 
@@ -72,9 +62,156 @@ function hexToNumber(hex: string): number | null {
   return parseInt(normalized, 16);
 }
 
-// ==========================================================
-// CONSTRÓI COMPONENTES DE UMA CATEGORIA
-// ==========================================================
+export async function buildCatalogPresentation(
+  guild: Guild
+): Promise<ContainerBuilder> {
+  const [categoryCount, medalCount] = await Promise.all([
+    prisma.medalCategory.count({
+      where: {
+        active: true,
+      },
+    }),
+    prisma.medal.count({
+      where: {
+        active: true,
+        category: {
+          active: true,
+        },
+      },
+    }),
+  ]);
+
+  const container = new ContainerBuilder().setAccentColor(0x1f4f78);
+
+  container.addMediaGalleryComponents((gallery) =>
+    gallery.addItems((item) =>
+      item.setURL("attachment://catalogo.png")
+    )
+  );
+
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      [
+        "# 🏅 ATLAS — CATÁLOGO OFICIAL DE MEDALHAS",
+        "",
+        "Consulte abaixo todas as condecorações atualmente disponíveis no sistema Atlas.",
+        "Cada categoria apresenta suas medalhas, requisitos, jurisprudências e responsáveis autorizados para entrega.",
+        "-# Exército Brasileiro • Sistema Oficial de Condecorações",
+      ].join("\n")
+    )
+  );
+
+  container.addSeparatorComponents(
+    new SeparatorBuilder()
+      .setDivider(true)
+      .setSpacing(SeparatorSpacingSize.Small)
+  );
+
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      [
+        "## 📊 Catálogo disponível",
+        "",
+        `**${categoryCount}** categoria(s) ativa(s)`,
+        `**${medalCount}** medalha(s) disponível(is)`,
+      ].join("\n")
+    )
+  );
+
+  container.addSeparatorComponents(
+    new SeparatorBuilder()
+      .setDivider(true)
+      .setSpacing(SeparatorSpacingSize.Small)
+  );
+
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      [
+        "## 📚 Como consultar",
+        "",
+        "**01** • Localize a categoria desejada abaixo.",
+        "**02** • Consulte as medalhas pertencentes à categoria.",
+        "**03** • Verifique os requisitos e a jurisprudência, quando houver.",
+        "**04** • Observe os cargos autorizados para a entrega da condecoração.",
+        "**05** • Para solicitar uma medalha, utilize o painel oficial de solicitações.",
+      ].join("\n")
+    )
+  );
+
+  container.addSeparatorComponents(
+    new SeparatorBuilder()
+      .setDivider(true)
+      .setSpacing(SeparatorSpacingSize.Small)
+  );
+
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      [
+        "## ℹ️ Informações importantes",
+        "",
+        "O catálogo é atualizado pelo Atlas conforme as configurações oficiais das medalhas.",
+        "As mensagens abaixo são organizadas por categoria para facilitar a consulta e evitar repetições desnecessárias da apresentação.",
+        "",
+        `-# Última atualização: ${formatDate(new Date())}`,
+      ].join("\n")
+    )
+  );
+
+  return container;
+}
+
+async function upsertCatalogPresentation(
+  guild: Guild,
+  channel: TextChannel
+): Promise<string> {
+  const config = await prisma.guildConfig.findUnique({
+    where: {
+      requestGuildId: guild.id,
+    },
+  });
+
+  if (!config) {
+    throw new Error("O servidor ainda não possui configuração do Atlas.");
+  }
+
+  const container = await buildCatalogPresentation(guild);
+  const payload = {
+    content: null,
+    embeds: [],
+    components: [container],
+    files: [
+      {
+        attachment: BANNER_PATH,
+        name: "catalogo.png",
+      },
+    ],
+    flags: MessageFlags.IsComponentsV2,
+  };
+
+  if (config.medalCatalogMessageId) {
+    const existing = await channel.messages
+      .fetch(config.medalCatalogMessageId)
+      .catch(() => null);
+
+    if (existing) {
+      await existing.edit(payload);
+      return existing.id;
+    }
+  }
+
+  const message = await channel.send(payload);
+
+  await prisma.guildConfig.update({
+    where: {
+      requestGuildId: guild.id,
+    },
+    data: {
+      medalCatalogMessageId: message.id,
+    },
+  });
+
+  return message.id;
+}
 
 export async function buildMedalCategoryComponents(
   guild: Guild,
@@ -90,8 +227,6 @@ export async function buildMedalCategoryComponents(
           active: true,
         },
         include: {
-          // O catálogo deve mostrar quem pode ENTREGAR a medalha,
-          // e não quem pode apenas aprovar/negá-la.
           deliveryPermissionRoles: {
             select: {
               roleId: true,
@@ -113,15 +248,7 @@ export async function buildMedalCategoryComponents(
     return null;
   }
 
-  // ========================================================
-  // CONTAINER PRINCIPAL
-  // ========================================================
-
   const container = new ContainerBuilder();
-
-  // ========================================================
-  // COR DE DESTAQUE
-  // ========================================================
 
   const firstMedalWithColor = category.medals.find(
     (medal) => medal.color
@@ -135,35 +262,23 @@ export async function buildMedalCategoryComponents(
     }
   }
 
-  // ========================================================
-  // CABEÇALHO DA CATEGORIA
-  // ========================================================
-
-  const categoryTitle = new TextDisplayBuilder().setContent(
-    [
-      `# ${category.emoji ?? "🏅"} ${category.name}`,
-      "",
-      category.description
-        ? cleanText(category.description)
-        : "### Sistema Oficial de Condecorações",
-    ].join("\n")
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(
+      [
+        `# ${category.emoji ?? "🏅"} ${category.name}`,
+        "",
+        category.description
+          ? cleanText(category.description)
+          : "### Sistema Oficial de Condecorações",
+      ].join("\n")
+    )
   );
-
-  container.addTextDisplayComponents(categoryTitle);
-
-  // ========================================================
-  // SEPARADOR
-  // ========================================================
 
   container.addSeparatorComponents(
     new SeparatorBuilder()
       .setDivider(true)
       .setSpacing(SeparatorSpacingSize.Small)
   );
-
-  // ========================================================
-  // MEDALHAS
-  // ========================================================
 
   for (let index = 0; index < category.medals.length; index++) {
     const medal = category.medals[index];
@@ -174,25 +289,13 @@ export async function buildMedalCategoryComponents(
 
     const sections: string[] = [];
 
-    // ======================================================
-    // NOME
-    // ======================================================
-
     sections.push(`## ${medal.emoji ?? "🎖️"} ${medal.name}`);
-
-    // ======================================================
-    // REQUISITOS
-    // ======================================================
 
     sections.push(
       "",
       "**Requisitos**",
       cleanText(medal.requirements)
     );
-
-    // ======================================================
-    // JURISPRUDÊNCIA
-    // ======================================================
 
     if (medal.jurisprudence) {
       sections.push(
@@ -201,10 +304,6 @@ export async function buildMedalCategoryComponents(
         cleanText(medal.jurisprudence)
       );
     }
-
-    // ======================================================
-    // CARGOS AUTORIZADOS PARA ENTREGA
-    // ======================================================
 
     sections.push(
       "",
@@ -215,19 +314,11 @@ export async function buildMedalCategoryComponents(
       )
     );
 
-    // ======================================================
-    // ADICIONA MEDALHA
-    // ======================================================
-
     container.addTextDisplayComponents(
       new TextDisplayBuilder().setContent(
         sections.join("\n")
       )
     );
-
-    // ======================================================
-    // SEPARADOR ENTRE MEDALHAS
-    // ======================================================
 
     if (index < category.medals.length - 1) {
       container.addSeparatorComponents(
@@ -238,10 +329,6 @@ export async function buildMedalCategoryComponents(
     }
   }
 
-  // ========================================================
-  // RODAPÉ
-  // ========================================================
-
   container.addSeparatorComponents(
     new SeparatorBuilder()
       .setDivider(true)
@@ -251,7 +338,7 @@ export async function buildMedalCategoryComponents(
   container.addTextDisplayComponents(
     new TextDisplayBuilder().setContent(
       [
-        `-# Atlas • Catálogo Oficial de Medalhas`,
+        `-# Atlas • ${category.name}`,
         `-# Última atualização: ${formatDate(new Date())}`,
       ].join("\n")
     )
@@ -259,10 +346,6 @@ export async function buildMedalCategoryComponents(
 
   return container;
 }
-
-// ==========================================================
-// CRIA MENSAGEM DA CATEGORIA
-// ==========================================================
 
 export async function createMedalCategoryCatalog(
   guild: Guild,
@@ -275,10 +358,7 @@ export async function createMedalCategoryCatalog(
   });
 
   if (!config?.medalCatalogChannelId) {
-    console.error(
-      "❌ [CATALOG] Canal do catálogo não configurado."
-    );
-
+    console.error("❌ [CATALOG] Canal do catálogo não configurado.");
     return null;
   }
 
@@ -286,19 +366,8 @@ export async function createMedalCategoryCatalog(
     config.medalCatalogChannelId
   );
 
-  if (!channel || !channel.isTextBased()) {
-    console.error(
-      "❌ [CATALOG] Canal do catálogo não encontrado."
-    );
-
-    return null;
-  }
-
   if (!(channel instanceof TextChannel)) {
-    console.error(
-      "❌ [CATALOG] O canal configurado não é um canal de texto."
-    );
-
+    console.error("❌ [CATALOG] Canal do catálogo não encontrado.");
     return null;
   }
 
@@ -335,16 +404,8 @@ export async function createMedalCategoryCatalog(
     },
   });
 
-  console.log(
-    `✅ [CATALOG] Categoria "${category.name}" publicada.`
-  );
-
   return message.id;
 }
-
-// ==========================================================
-// ATUALIZA MENSAGEM DA CATEGORIA
-// ==========================================================
 
 export async function updateMedalCategoryCatalog(
   guild: Guild,
@@ -357,20 +418,13 @@ export async function updateMedalCategoryCatalog(
   });
 
   if (!config?.medalCatalogChannelId) {
-    console.error(
-      "❌ [CATALOG] Canal do catálogo não configurado."
-    );
-
+    console.error("❌ [CATALOG] Canal do catálogo não configurado.");
     return false;
   }
 
   const channel = guild.channels.cache.get(
     config.medalCatalogChannelId
   );
-
-  if (!channel || !channel.isTextBased()) {
-    return false;
-  }
 
   if (!(channel instanceof TextChannel)) {
     return false;
@@ -397,13 +451,9 @@ export async function updateMedalCategoryCatalog(
         const oldMessage = await channel.messages.fetch(
           category.catalogMessageId
         );
-
         await oldMessage.delete();
-      } catch (error) {
-        console.warn(
-          "⚠️ [CATALOG] Não foi possível remover a mensagem antiga da categoria:",
-          error
-        );
+      } catch {
+        // Mensagem já pode ter sido removida.
       }
 
       await prisma.medalCategory.update({
@@ -434,10 +484,6 @@ export async function updateMedalCategoryCatalog(
       },
     });
 
-    console.log(
-      `✅ [CATALOG] Mensagem criada para a categoria "${category.name}".`
-    );
-
     return true;
   }
 
@@ -451,17 +497,8 @@ export async function updateMedalCategoryCatalog(
       flags: MessageFlags.IsComponentsV2,
     });
 
-    console.log(
-      `✅ [CATALOG] Categoria "${category.name}" atualizada.`
-    );
-
     return true;
-  } catch (error) {
-    console.warn(
-      `⚠️ [CATALOG] Mensagem da categoria "${category.name}" não encontrada. Criando uma nova...`,
-      error
-    );
-
+  } catch {
     try {
       const message = await channel.send({
         components: [container],
@@ -477,10 +514,6 @@ export async function updateMedalCategoryCatalog(
         },
       });
 
-      console.log(
-        `✅ [CATALOG] Nova mensagem criada para "${category.name}".`
-      );
-
       return true;
     } catch (sendError) {
       console.error(
@@ -493,10 +526,6 @@ export async function updateMedalCategoryCatalog(
   }
 }
 
-// ==========================================================
-// SINCRONIZA TODO O CATÁLOGO
-// ==========================================================
-
 export async function syncMedalCatalog(
   guild: Guild
 ): Promise<boolean> {
@@ -507,12 +536,20 @@ export async function syncMedalCatalog(
   });
 
   if (!config?.medalCatalogChannelId) {
-    console.error(
-      "❌ [CATALOG] Canal do catálogo não configurado."
-    );
-
+    console.error("❌ [CATALOG] Canal do catálogo não configurado.");
     return false;
   }
+
+  const channel = guild.channels.cache.get(
+    config.medalCatalogChannelId
+  );
+
+  if (!(channel instanceof TextChannel)) {
+    console.error("❌ [CATALOG] Canal do catálogo não encontrado.");
+    return false;
+  }
+
+  await upsertCatalogPresentation(guild, channel);
 
   const categories = await prisma.medalCategory.findMany({
     orderBy: [
@@ -526,61 +563,36 @@ export async function syncMedalCatalog(
   });
 
   for (const category of categories) {
-    await updateMedalCategoryCatalog(
-      guild,
-      category.id
-    );
+    await updateMedalCategoryCatalog(guild, category.id);
   }
 
-  const channel = guild.channels.cache.get(
-    config.medalCatalogChannelId
-  );
-
-  if (channel instanceof TextChannel) {
-    for (const category of categories) {
-      if (category.active) {
-        continue;
-      }
-
-      if (!category.catalogMessageId) {
-        continue;
-      }
-
-      try {
-        const message = await channel.messages.fetch(
-          category.catalogMessageId
-        );
-
-        await message.delete();
-      } catch {
-        // Mensagem já pode ter sido removida.
-      }
-
-      await prisma.medalCategory.update({
-        where: {
-          id: category.id,
-        },
-        data: {
-          catalogMessageId: null,
-        },
-      });
+  for (const category of categories) {
+    if (category.active || !category.catalogMessageId) {
+      continue;
     }
+
+    try {
+      const message = await channel.messages.fetch(
+        category.catalogMessageId
+      );
+      await message.delete();
+    } catch {
+      // Mensagem já pode ter sido removida.
+    }
+
+    await prisma.medalCategory.update({
+      where: {
+        id: category.id,
+      },
+      data: {
+        catalogMessageId: null,
+      },
+    });
   }
 
-  console.log(
-    "✅ [CATALOG] Catálogo sincronizado com sucesso."
-  );
-
+  console.log("✅ [CATALOG] Catálogo sincronizado com sucesso.");
   return true;
 }
-
-// ==========================================================
-// COMPATIBILIDADE
-// ==========================================================
-// Mantemos estas funções para facilitar a transição do código
-// existente.
-//
-// A partir de agora, o catálogo é sincronizado por categoria.
 
 export async function createMedalCatalog(
   guild: Guild,
@@ -601,24 +613,13 @@ export async function createMedalCatalog(
     return null;
   }
 
-  const firstCategory = await prisma.medalCategory.findFirst({
+  const config = await prisma.guildConfig.findUnique({
     where: {
-      active: true,
-      catalogMessageId: {
-        not: null,
-      },
+      requestGuildId: guild.id,
     },
-    orderBy: [
-      {
-        position: "asc",
-      },
-      {
-        name: "asc",
-      },
-    ],
   });
 
-  return firstCategory?.catalogMessageId ?? null;
+  return config?.medalCatalogMessageId ?? null;
 }
 
 export async function updateMedalCatalog(
