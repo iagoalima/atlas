@@ -30,6 +30,8 @@ function buildPanel(): ContainerBuilder {
       "",
       "Tenha em mãos provas **verdadeiras, completas e legíveis** para cada medalha.",
       "",
+      "⚠️ **É obrigatório manter as mensagens privadas (DMs) abertas.** O Atlas precisa conseguir enviar mensagens no seu privado para solicitar o envio das provas e comunicar atualizações sobre o andamento da solicitação.",
+      "",
       "-# O Atlas organiza as provas por medalha para evitar confusão durante a análise.",
     ].join("\n")))
     .addActionRowComponents(new ActionRowBuilder<ButtonBuilder>().addComponents(
