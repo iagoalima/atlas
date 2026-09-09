@@ -48,7 +48,7 @@ client.on("interactionCreate", async (interaction) => {
       }
       if (interaction.customId.startsWith("atlas_analysis_open:")) {
         const ticketId = interaction.customId.split(":")[1];
-        const ticket = await (await import("../infrastructure/database/prisma.js")).prisma.ticket.findUnique({ where: { id: ticketId } });
+        const ticket = ticketId ? await (await import("../infrastructure/database/prisma.js")).prisma.ticket.findUnique({ where: { id: ticketId } }) : null;
         if (!ticket) { await interaction.reply({ content: "❌ Solicitação não encontrada.", flags: 64 }); return; }
         await interaction.reply({ content: `🔎 **Solicitação #${ticket.ticketNumber}**\n\nA análise individual está em ${interaction.guild?.channels.cache.get(ticket.channelId) ?? `\`${ticket.channelId}\``}.`, flags: 64 });
         return;
