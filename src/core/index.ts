@@ -7,26 +7,20 @@ import { handleRequestButton, handleRequestMessage, handleRequestModal, handleRe
 import { handleProofUploadButton } from "../services/request-proof-button.service.js";
 import { handleSeasonalReviewButton, handleSeasonalReviewModal } from "../services/request-review.service.js";
 import { refreshLatestSeasonalReviewPanel } from "../services/request-review-panel.service.js";
+import { buildAnalysisDashboard } from "../services/analysis-dashboard.service.js";
 import { startRequestNotifications } from "../services/request-notification.service.js";
 
 client.once("clientReady", (bot) => console.log(`Atlas conectado como ${bot.user.tag}`));
+
 client.on("messageCreate", async (message) => {
   try {
     const handledRequest = await handleRequestMessage(message);
     if (handledRequest) {
       if (!message.guild) {
-        const ticket = await (await import("../infrastructure/database/prisma.js")).prisma.ticket.findFirst({
-          where: { userId: message.author.id, status: "OPEN", requestGuildId: { not: null } },
-          orderBy: { createdAt: "desc" },
-        });
+        const ticket = await (await import("../infrastructure/database/prisma.js")).prisma.ticket.findFirst({ where: { userId: message.author.id, status: "OPEN", requestGuildId: { not: null } }, orderBy: { createdAt: "desc" } });
         if (ticket?.requestGuildId) {
-          const config = await (await import("../infrastructure/database/prisma.js")).prisma.guildConfig.findUnique({
-            where: { requestGuildId: ticket.requestGuildId },
-            select: { requestReviewChannelId: true },
-          });
-          if (config?.requestReviewChannelId) {
-            await refreshLatestSeasonalReviewPanel(message.client, ticket.id, config.requestReviewChannelId);
-          }
+          const config = await (await import("../infrastructure/database/prisma.js")).prisma.guildConfig.findUnique({ where: { requestGuildId: ticket.requestGuildId }, select: { requestReviewChannelId: true } });
+          if (config?.requestReviewChannelId) await refreshLatestSeasonalReviewPanel(message.client, ticket.id, config.requestReviewChannelId);
         }
       }
       return;
@@ -42,6 +36,23 @@ client.on("interactionCreate", async (interaction) => {
   try {
     installInteractionMessageStyle(interaction);
     if (interaction.isButton()) {
+      if (interaction.customId.startsWith("atlas_dashboard_requests")) {
+        await handleRequestButton(interaction);
+        return;
+      }
+      if (interaction.customId.startsWith("atlas_dashboard_catalog")) {
+        const config = interaction.guild ? await (await import("../infrastructure/database/prisma.js")).prisma.guildConfig.findUnique({ where: { requestGuildId: interaction.guild.id }, select: { medalCatalogChannelId: true } }) : null;
+        if (!config?.medalCatalogChannelId) { await interaction.reply({ content: "❌ O catálogo ainda não foi configurado.", flags: 64 }); return; }
+        await interaction.reply({ content: `🏅 O catálogo oficial está disponível em <#${config.medalCatalogChannelId}>.`, flags: 64 });
+        return;
+      }
+      if (interaction.customId.startsWith("atlas_analysis_open:")) {
+        const ticketId = interaction.customId.split(":")[1];
+        const ticket = await (await import("../infrastructure/database/prisma.js")).prisma.ticket.findUnique({ where: { id: ticketId } });
+        if (!ticket) { await interaction.reply({ content: "❌ Solicitação não encontrada.", flags: 64 }); return; }
+        await interaction.reply({ content: `🔎 **Solicitação #${ticket.ticketNumber}**\n\nA análise individual está em ${interaction.guild?.channels.cache.get(ticket.channelId) ?? `\`${ticket.channelId}\``}.`, flags: 64 });
+        return;
+      }
       if (await handleProofUploadButton(interaction)) return;
       if (await handleRequestButton(interaction)) return;
       if (await handleProofView(interaction)) return;
@@ -87,8 +98,7 @@ client.on("interactionCreate", async (interaction) => {
     if (!interaction.isRepliable()) return;
     try {
       const content = "## ❌ Algo deu errado\n\nO Atlas não conseguiu concluir esta ação.\n\n-# Tente novamente em alguns instantes.";
-      if (interaction.replied || interaction.deferred) await interaction.followUp({ content, flags: 64 });
-      else await interaction.reply({ content, flags: 64 });
+      if (interaction.replied || interaction.deferred) await interaction.followUp({ content, flags: 64 }); else await interaction.reply({ content, flags: 64 });
     } catch (replyError) { console.error("❌ [INTERACTION] Não foi possível responder ao erro:", replyError); }
   }
 });
