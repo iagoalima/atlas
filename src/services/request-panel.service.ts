@@ -1,35 +1,39 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, ContainerBuilder, Guild, MessageFlags, SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder } from "discord.js";
+import path from "node:path";
 import { prisma } from "../infrastructure/database/prisma.js";
 
+const BANNER_PATH = path.resolve(process.cwd(), "assets/panels/solicitacoes.png");
+
 function buildPanel(): ContainerBuilder {
-  return new ContainerBuilder().setAccentColor(0x3498db)
+  return new ContainerBuilder().setAccentColor(0x1f4f78)
+    .addMediaGalleryComponents((gallery) => gallery.addItems((item) => item.setURL("attachment://solicitacoes.png")))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent([
-      "# 🎖️ Solicitações de Medalhas", "",
-      "O Atlas centraliza aqui o processo de solicitação de medalhas do Exército Brasileiro.",
+      "# 🎖️ CENTRAL DE SOLICITAÇÕES",
+      "",
+      "O Atlas centraliza aqui o processo oficial de solicitação de medalhas.",
+      "-# Selecione de 1 a 3 medalhas e acompanhe cada etapa individualmente.",
     ].join("\n")))
     .addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent([
-      "## 📋 Como funciona", "",
-      "1. Selecione de **1 a 3 medalhas**.",
-      "2. Informe seu nome de usuário no Roblox.",
-      "3. Envie as provas de **cada medalha separadamente**.",
-      "4. Aguarde a análise individual da equipe.",
-      "5. Após a aprovação, um responsável autorizado realizará a entrega.",
-      "6. Você receberá mensagens privadas quando a solicitação for registrada, analisada e entregue.",
+      "## 📋 Como funciona",
+      "",
+      "**01** • Selecione de **1 a 3 medalhas**.",
+      "**02** • Informe seu nome de usuário no Roblox.",
+      "**03** • Envie as provas de cada medalha separadamente pelo privado.",
+      "**04** • Aguarde a análise individual da equipe.",
+      "**05** • Após a aprovação, a entrega é realizada por um responsável autorizado.",
+      "**06** • O Atlas envia as atualizações importantes diretamente no privado.",
     ].join("\n")))
     .addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small))
     .addTextDisplayComponents(new TextDisplayBuilder().setContent([
-      "## 📎 Obrigações do solicitante", "",
-      "- Enviar provas verdadeiras, completas e legíveis.",
-      "- Enviar as provas correspondentes à medalha solicitada.",
-      "- Não misturar provas de medalhas diferentes durante o envio.",
-      "- Informar corretamente o nome no Roblox.",
-      "- Aguardar a análise da equipe após concluir o envio.",
-      "-# Solicitações incompletas podem não ser aprovadas.",
+      "## 📎 Antes de começar",
+      "",
+      "Tenha em mãos provas **verdadeiras, completas e legíveis** para cada medalha.",
+      "",
+      "-# O Atlas organiza as provas por medalha para evitar confusão durante a análise.",
     ].join("\n")))
-    .addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small))
     .addActionRowComponents(new ActionRowBuilder<ButtonBuilder>().addComponents(
-      new ButtonBuilder().setCustomId("request_start").setLabel("Solicitar medalhas").setEmoji("🎖️").setStyle(ButtonStyle.Primary),
+      new ButtonBuilder().setCustomId("request_start").setLabel("Iniciar solicitação").setEmoji("🎖️").setStyle(ButtonStyle.Primary),
     ));
 }
 
@@ -38,15 +42,12 @@ export async function createRequestPanel(guild: Guild, channelId: string): Promi
   if (!channel?.isTextBased() || !channel.isSendable()) throw new Error("O canal do painel de solicitações não foi encontrado ou não permite mensagens.");
   const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: guild.id } });
   if (!config) throw new Error("O servidor ainda não possui configuração do Atlas.");
+  const payload = { content: null, embeds: [], components: [buildPanel()], files: [{ attachment: BANNER_PATH, name: "solicitacoes.png" }], flags: MessageFlags.IsComponentsV2 };
   if (config.requestPanelMessageId) {
     const existing = await channel.messages.fetch(config.requestPanelMessageId).catch(() => null);
-    if (existing) {
-      await existing.edit({ content: null, embeds: [], components: [buildPanel()], flags: MessageFlags.IsComponentsV2 });
-      await prisma.guildConfig.update({ where: { requestGuildId: guild.id }, data: { requestPanelChannelId: channel.id, requestPanelMessageId: existing.id } });
-      return existing.id;
-    }
+    if (existing) { await existing.edit(payload); await prisma.guildConfig.update({ where: { requestGuildId: guild.id }, data: { requestPanelChannelId: channel.id } }); return existing.id; }
   }
-  const message = await channel.send({ components: [buildPanel()], flags: MessageFlags.IsComponentsV2 });
+  const message = await channel.send(payload);
   await prisma.guildConfig.update({ where: { requestGuildId: guild.id }, data: { requestPanelChannelId: channel.id, requestPanelMessageId: message.id } });
   return message.id;
 }
