@@ -12,12 +12,7 @@ export const data = new SlashCommandBuilder()
   .addSubcommand((s) =>
     s
       .setName("dashboard")
-      .setDescription("Publica ou atualiza a Central Interna de Análise.")
-  )
-  .addSubcommand((s) =>
-    s
-      .setName("analise")
-      .setDescription("Publica ou atualiza a Central Interna de Análise.")
+      .setDescription("Publica ou atualiza o Dashboard do Atlas.")
   );
 
 export async function execute(
@@ -25,21 +20,17 @@ export async function execute(
 ): Promise<void> {
   if (!interaction.guild) {
     await interaction.reply({
-      content:
-        "❌ Este comando só pode ser usado em um servidor.",
+      content: "❌ Este comando só pode ser usado em um servidor.",
       flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
-  const member = await interaction.guild.members.fetch(
-    interaction.user.id
-  );
+  const member = await interaction.guild.members.fetch(interaction.user.id);
 
   if (!member.permissions.has("Administrator")) {
     await interaction.reply({
-      content:
-        "❌ Apenas administradores podem publicar a Central Interna de Análise.",
+      content: "❌ Apenas administradores podem publicar o Dashboard do Atlas.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -54,18 +45,18 @@ export async function execute(
   if (!config) {
     await interaction.reply({
       content:
-        "## ⚙️ Atlas não configurado\n\nConclua o `/setup` antes de publicar a central.",
+        "## ⚙️ Atlas não configurado\n\nConclua o `/setup` antes de publicar o Dashboard.",
       flags: MessageFlags.Ephemeral,
     });
     return;
   }
 
-  const channelId = config.requestReviewChannelId;
+  const channelId = config.dashboardChannelId;
 
   if (!channelId) {
     await interaction.reply({
       content:
-        "## ⚙️ Canal de análise não configurado\n\nConfigure o canal privado de análise pelo `/setup` antes de publicar a central.",
+        "## ⚙️ Canal do Dashboard não configurado\n\nSelecione o canal do Dashboard pelo `/setup` antes de publicar o painel.",
       flags: MessageFlags.Ephemeral,
     });
     return;
@@ -83,20 +74,19 @@ export async function execute(
 
     await interaction.editReply({
       content: [
-        "## 🟢 Central Interna de Análise atualizada",
+        "## 🟢 Dashboard atualizado",
         "",
-        `A central está disponível em <#${channelId}>.`,
+        `O Dashboard está disponível em <#${channelId}>.`,
         "",
         `-# Mensagem: \`${messageId}\``,
-        "-# O painel não é publicado em canais públicos.",
       ].join("\n"),
     });
   } catch (error) {
-    console.error("❌ [ATLAS PANEL] Erro:", error);
+    console.error("❌ [ATLAS DASHBOARD] Erro:", error);
 
     await interaction.editReply({
       content: [
-        "## ❌ Não foi possível atualizar a central",
+        "## ❌ Não foi possível atualizar o Dashboard",
         "",
         error instanceof Error
           ? error.message
