@@ -18,6 +18,8 @@ model GuildConfig {
   responsibleRoleId String?
   medalCatalogMessageId String?
   medalCatalogChannelId String?
+  dashboardChannelId String?
+  dashboardMessageId String?
   ticketPanelChannelId String?
   ticketPanelMessageId String?
   requestPanelChannelId String?
@@ -216,7 +218,6 @@ enum AuditAction {
   TICKET_CREATED
   TICKET_CLOSED
   TICKET_DELETED
-
   MEDAL_CREATED
   MEDAL_UPDATED
   MEDAL_REMOVED
@@ -224,10 +225,8 @@ enum AuditAction {
   MEDAL_ACCEPTED
   MEDAL_GRANTED
   MEDAL_DENIED
-
   MEDAL_SELF_DELIVERY_BLOCKED
   MEDAL_SELF_DELIVERY_ATTEMPT
-
   TRANSCRIPT_CREATED
   CONFIG_UPDATED
   CATEGORY_CREATED
