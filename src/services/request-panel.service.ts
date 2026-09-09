@@ -42,7 +42,7 @@ export async function createRequestPanel(guild: Guild, channelId: string): Promi
   if (!channel?.isTextBased() || !channel.isSendable()) throw new Error("O canal do painel de solicitações não foi encontrado ou não permite mensagens.");
   const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: guild.id } });
   if (!config) throw new Error("O servidor ainda não possui configuração do Atlas.");
-  const payload = { content: null, embeds: [], components: [buildPanel()], files: [{ attachment: BANNER_PATH, name: "solicitacoes.png" }], flags: MessageFlags.IsComponentsV2 };
+  const payload = { content: null, embeds: [], components: [buildPanel()], files: [{ attachment: BANNER_PATH, name: "solicitacoes.png" }], flags: MessageFlags.IsComponentsV2 as const };
   if (config.requestPanelMessageId) {
     const existing = await channel.messages.fetch(config.requestPanelMessageId).catch(() => null);
     if (existing) { await existing.edit(payload); await prisma.guildConfig.update({ where: { requestGuildId: guild.id }, data: { requestPanelChannelId: channel.id } }); return existing.id; }
