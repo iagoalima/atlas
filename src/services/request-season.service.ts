@@ -83,15 +83,16 @@ export async function announceRequestState(guild: Guild, open: boolean): Promise
       new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small)
     )
     .addTextDisplayComponents(
-      new TextDisplayBuilder().setContent(
-        open
-          ? "-# Atlas • Sistema de Solicitações de Medalhas"
-          : "-# Atlas • Sistema de Solicitações de Medalhas"
-      )
+      new TextDisplayBuilder().setContent("-# Atlas • Sistema de Solicitações de Medalhas")
     );
 
+  // Components V2 não permite usar o campo legado `content`.
+  // O @everyone fica no TextDisplay para manter a mensagem em Components V2.
+  container.addTextDisplayComponents(
+    new TextDisplayBuilder().setContent("@everyone")
+  );
+
   const message = await channel.send({
-    content: "@everyone",
     components: [container],
     flags: MessageFlags.IsComponentsV2,
     allowedMentions: { parse: ["everyone"] },
