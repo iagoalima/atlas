@@ -32,6 +32,7 @@ export type TicketProofMinAggregateOutputType = {
   channelId: string | null
   url: string | null
   fileName: string | null
+  medalId: string | null
   createdAt: Date | null
 }
 
@@ -43,6 +44,7 @@ export type TicketProofMaxAggregateOutputType = {
   channelId: string | null
   url: string | null
   fileName: string | null
+  medalId: string | null
   createdAt: Date | null
 }
 
@@ -54,6 +56,7 @@ export type TicketProofCountAggregateOutputType = {
   channelId: number
   url: number
   fileName: number
+  medalId: number
   createdAt: number
   _all: number
 }
@@ -67,6 +70,7 @@ export type TicketProofMinAggregateInputType = {
   channelId?: true
   url?: true
   fileName?: true
+  medalId?: true
   createdAt?: true
 }
 
@@ -78,6 +82,7 @@ export type TicketProofMaxAggregateInputType = {
   channelId?: true
   url?: true
   fileName?: true
+  medalId?: true
   createdAt?: true
 }
 
@@ -89,6 +94,7 @@ export type TicketProofCountAggregateInputType = {
   channelId?: true
   url?: true
   fileName?: true
+  medalId?: true
   createdAt?: true
   _all?: true
 }
@@ -173,6 +179,7 @@ export type TicketProofGroupByOutputType = {
   channelId: string
   url: string
   fileName: string | null
+  medalId: string | null
   createdAt: Date
   _count: TicketProofCountAggregateOutputType | null
   _min: TicketProofMinAggregateOutputType | null
@@ -205,6 +212,7 @@ export type TicketProofWhereInput = {
   channelId?: Prisma.StringFilter<"TicketProof"> | string
   url?: Prisma.StringFilter<"TicketProof"> | string
   fileName?: Prisma.StringNullableFilter<"TicketProof"> | string | null
+  medalId?: Prisma.StringNullableFilter<"TicketProof"> | string | null
   createdAt?: Prisma.DateTimeFilter<"TicketProof"> | Date | string
   ticket?: Prisma.XOR<Prisma.TicketScalarRelationFilter, Prisma.TicketWhereInput>
 }
@@ -217,6 +225,7 @@ export type TicketProofOrderByWithRelationInput = {
   channelId?: Prisma.SortOrder
   url?: Prisma.SortOrder
   fileName?: Prisma.SortOrderInput | Prisma.SortOrder
+  medalId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   ticket?: Prisma.TicketOrderByWithRelationInput
 }
@@ -232,6 +241,7 @@ export type TicketProofWhereUniqueInput = Prisma.AtLeast<{
   channelId?: Prisma.StringFilter<"TicketProof"> | string
   url?: Prisma.StringFilter<"TicketProof"> | string
   fileName?: Prisma.StringNullableFilter<"TicketProof"> | string | null
+  medalId?: Prisma.StringNullableFilter<"TicketProof"> | string | null
   createdAt?: Prisma.DateTimeFilter<"TicketProof"> | Date | string
   ticket?: Prisma.XOR<Prisma.TicketScalarRelationFilter, Prisma.TicketWhereInput>
 }, "id">
@@ -244,6 +254,7 @@ export type TicketProofOrderByWithAggregationInput = {
   channelId?: Prisma.SortOrder
   url?: Prisma.SortOrder
   fileName?: Prisma.SortOrderInput | Prisma.SortOrder
+  medalId?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.TicketProofCountOrderByAggregateInput
   _max?: Prisma.TicketProofMaxOrderByAggregateInput
@@ -261,6 +272,7 @@ export type TicketProofScalarWhereWithAggregatesInput = {
   channelId?: Prisma.StringWithAggregatesFilter<"TicketProof"> | string
   url?: Prisma.StringWithAggregatesFilter<"TicketProof"> | string
   fileName?: Prisma.StringNullableWithAggregatesFilter<"TicketProof"> | string | null
+  medalId?: Prisma.StringNullableWithAggregatesFilter<"TicketProof"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"TicketProof"> | Date | string
 }
 
@@ -271,6 +283,7 @@ export type TicketProofCreateInput = {
   channelId: string
   url: string
   fileName?: string | null
+  medalId?: string | null
   createdAt?: Date | string
   ticket: Prisma.TicketCreateNestedOneWithoutProofsInput
 }
@@ -283,6 +296,7 @@ export type TicketProofUncheckedCreateInput = {
   channelId: string
   url: string
   fileName?: string | null
+  medalId?: string | null
   createdAt?: Date | string
 }
 
@@ -293,6 +307,7 @@ export type TicketProofUpdateInput = {
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
   fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ticket?: Prisma.TicketUpdateOneRequiredWithoutProofsNestedInput
 }
@@ -305,6 +320,7 @@ export type TicketProofUncheckedUpdateInput = {
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
   fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -316,6 +332,7 @@ export type TicketProofCreateManyInput = {
   channelId: string
   url: string
   fileName?: string | null
+  medalId?: string | null
   createdAt?: Date | string
 }
 
@@ -326,6 +343,7 @@ export type TicketProofUpdateManyMutationInput = {
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
   fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -337,6 +355,7 @@ export type TicketProofUncheckedUpdateManyInput = {
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
   fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -358,6 +377,7 @@ export type TicketProofCountOrderByAggregateInput = {
   channelId?: Prisma.SortOrder
   url?: Prisma.SortOrder
   fileName?: Prisma.SortOrder
+  medalId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -369,6 +389,7 @@ export type TicketProofMaxOrderByAggregateInput = {
   channelId?: Prisma.SortOrder
   url?: Prisma.SortOrder
   fileName?: Prisma.SortOrder
+  medalId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -380,6 +401,7 @@ export type TicketProofMinOrderByAggregateInput = {
   channelId?: Prisma.SortOrder
   url?: Prisma.SortOrder
   fileName?: Prisma.SortOrder
+  medalId?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -432,6 +454,7 @@ export type TicketProofCreateWithoutTicketInput = {
   channelId: string
   url: string
   fileName?: string | null
+  medalId?: string | null
   createdAt?: Date | string
 }
 
@@ -442,6 +465,7 @@ export type TicketProofUncheckedCreateWithoutTicketInput = {
   channelId: string
   url: string
   fileName?: string | null
+  medalId?: string | null
   createdAt?: Date | string
 }
 
@@ -482,6 +506,7 @@ export type TicketProofScalarWhereInput = {
   channelId?: Prisma.StringFilter<"TicketProof"> | string
   url?: Prisma.StringFilter<"TicketProof"> | string
   fileName?: Prisma.StringNullableFilter<"TicketProof"> | string | null
+  medalId?: Prisma.StringNullableFilter<"TicketProof"> | string | null
   createdAt?: Prisma.DateTimeFilter<"TicketProof"> | Date | string
 }
 
@@ -492,6 +517,7 @@ export type TicketProofCreateManyTicketInput = {
   channelId: string
   url: string
   fileName?: string | null
+  medalId?: string | null
   createdAt?: Date | string
 }
 
@@ -502,6 +528,7 @@ export type TicketProofUpdateWithoutTicketInput = {
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
   fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -512,6 +539,7 @@ export type TicketProofUncheckedUpdateWithoutTicketInput = {
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
   fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -522,6 +550,7 @@ export type TicketProofUncheckedUpdateManyWithoutTicketInput = {
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
   url?: Prisma.StringFieldUpdateOperationsInput | string
   fileName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  medalId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -535,6 +564,7 @@ export type TicketProofSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   channelId?: boolean
   url?: boolean
   fileName?: boolean
+  medalId?: boolean
   createdAt?: boolean
   ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["ticketProof"]>
@@ -547,6 +577,7 @@ export type TicketProofSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   channelId?: boolean
   url?: boolean
   fileName?: boolean
+  medalId?: boolean
   createdAt?: boolean
   ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["ticketProof"]>
@@ -559,6 +590,7 @@ export type TicketProofSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   channelId?: boolean
   url?: boolean
   fileName?: boolean
+  medalId?: boolean
   createdAt?: boolean
   ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["ticketProof"]>
@@ -571,10 +603,11 @@ export type TicketProofSelectScalar = {
   channelId?: boolean
   url?: boolean
   fileName?: boolean
+  medalId?: boolean
   createdAt?: boolean
 }
 
-export type TicketProofOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ticketId" | "userId" | "messageId" | "channelId" | "url" | "fileName" | "createdAt", ExtArgs["result"]["ticketProof"]>
+export type TicketProofOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ticketId" | "userId" | "messageId" | "channelId" | "url" | "fileName" | "medalId" | "createdAt", ExtArgs["result"]["ticketProof"]>
 export type TicketProofInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   ticket?: boolean | Prisma.TicketDefaultArgs<ExtArgs>
 }
@@ -598,6 +631,7 @@ export type $TicketProofPayload<ExtArgs extends runtime.Types.Extensions.Interna
     channelId: string
     url: string
     fileName: string | null
+    medalId: string | null
     createdAt: Date
   }, ExtArgs["result"]["ticketProof"]>
   composites: {}
@@ -1030,6 +1064,7 @@ export interface TicketProofFieldRefs {
   readonly channelId: Prisma.FieldRef<"TicketProof", 'String'>
   readonly url: Prisma.FieldRef<"TicketProof", 'String'>
   readonly fileName: Prisma.FieldRef<"TicketProof", 'String'>
+  readonly medalId: Prisma.FieldRef<"TicketProof", 'String'>
   readonly createdAt: Prisma.FieldRef<"TicketProof", 'DateTime'>
 }
     

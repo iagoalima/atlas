@@ -28,16 +28,19 @@ export type AggregateTicket = {
 
 export type TicketAvgAggregateOutputType = {
   ticketNumber: number | null
+  proofCollectionIndex: number | null
 }
 
 export type TicketSumAggregateOutputType = {
   ticketNumber: number | null
+  proofCollectionIndex: number | null
 }
 
 export type TicketMinAggregateOutputType = {
   id: string | null
   ticketNumber: number | null
   channelId: string | null
+  requestGuildId: string | null
   userId: string | null
   username: string | null
   nickname: string | null
@@ -46,6 +49,7 @@ export type TicketMinAggregateOutputType = {
   staffId: string | null
   reason: string | null
   proofsSubmittedAt: Date | null
+  proofCollectionIndex: number | null
   createdAt: Date | null
   closedAt: Date | null
 }
@@ -54,6 +58,7 @@ export type TicketMaxAggregateOutputType = {
   id: string | null
   ticketNumber: number | null
   channelId: string | null
+  requestGuildId: string | null
   userId: string | null
   username: string | null
   nickname: string | null
@@ -62,6 +67,7 @@ export type TicketMaxAggregateOutputType = {
   staffId: string | null
   reason: string | null
   proofsSubmittedAt: Date | null
+  proofCollectionIndex: number | null
   createdAt: Date | null
   closedAt: Date | null
 }
@@ -70,6 +76,7 @@ export type TicketCountAggregateOutputType = {
   id: number
   ticketNumber: number
   channelId: number
+  requestGuildId: number
   userId: number
   username: number
   nickname: number
@@ -78,6 +85,7 @@ export type TicketCountAggregateOutputType = {
   staffId: number
   reason: number
   proofsSubmittedAt: number
+  proofCollectionIndex: number
   createdAt: number
   closedAt: number
   _all: number
@@ -86,16 +94,19 @@ export type TicketCountAggregateOutputType = {
 
 export type TicketAvgAggregateInputType = {
   ticketNumber?: true
+  proofCollectionIndex?: true
 }
 
 export type TicketSumAggregateInputType = {
   ticketNumber?: true
+  proofCollectionIndex?: true
 }
 
 export type TicketMinAggregateInputType = {
   id?: true
   ticketNumber?: true
   channelId?: true
+  requestGuildId?: true
   userId?: true
   username?: true
   nickname?: true
@@ -104,6 +115,7 @@ export type TicketMinAggregateInputType = {
   staffId?: true
   reason?: true
   proofsSubmittedAt?: true
+  proofCollectionIndex?: true
   createdAt?: true
   closedAt?: true
 }
@@ -112,6 +124,7 @@ export type TicketMaxAggregateInputType = {
   id?: true
   ticketNumber?: true
   channelId?: true
+  requestGuildId?: true
   userId?: true
   username?: true
   nickname?: true
@@ -120,6 +133,7 @@ export type TicketMaxAggregateInputType = {
   staffId?: true
   reason?: true
   proofsSubmittedAt?: true
+  proofCollectionIndex?: true
   createdAt?: true
   closedAt?: true
 }
@@ -128,6 +142,7 @@ export type TicketCountAggregateInputType = {
   id?: true
   ticketNumber?: true
   channelId?: true
+  requestGuildId?: true
   userId?: true
   username?: true
   nickname?: true
@@ -136,6 +151,7 @@ export type TicketCountAggregateInputType = {
   staffId?: true
   reason?: true
   proofsSubmittedAt?: true
+  proofCollectionIndex?: true
   createdAt?: true
   closedAt?: true
   _all?: true
@@ -231,6 +247,7 @@ export type TicketGroupByOutputType = {
   id: string
   ticketNumber: number
   channelId: string
+  requestGuildId: string | null
   userId: string
   username: string
   nickname: string | null
@@ -239,6 +256,7 @@ export type TicketGroupByOutputType = {
   staffId: string | null
   reason: string | null
   proofsSubmittedAt: Date | null
+  proofCollectionIndex: number
   createdAt: Date
   closedAt: Date | null
   _count: TicketCountAggregateOutputType | null
@@ -270,6 +288,7 @@ export type TicketWhereInput = {
   id?: Prisma.StringFilter<"Ticket"> | string
   ticketNumber?: Prisma.IntFilter<"Ticket"> | number
   channelId?: Prisma.StringFilter<"Ticket"> | string
+  requestGuildId?: Prisma.StringNullableFilter<"Ticket"> | string | null
   userId?: Prisma.StringFilter<"Ticket"> | string
   username?: Prisma.StringFilter<"Ticket"> | string
   nickname?: Prisma.StringNullableFilter<"Ticket"> | string | null
@@ -278,6 +297,7 @@ export type TicketWhereInput = {
   staffId?: Prisma.StringNullableFilter<"Ticket"> | string | null
   reason?: Prisma.StringNullableFilter<"Ticket"> | string | null
   proofsSubmittedAt?: Prisma.DateTimeNullableFilter<"Ticket"> | Date | string | null
+  proofCollectionIndex?: Prisma.IntFilter<"Ticket"> | number
   createdAt?: Prisma.DateTimeFilter<"Ticket"> | Date | string
   closedAt?: Prisma.DateTimeNullableFilter<"Ticket"> | Date | string | null
   medals?: Prisma.TicketMedalListRelationFilter
@@ -291,6 +311,7 @@ export type TicketOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   ticketNumber?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
+  requestGuildId?: Prisma.SortOrderInput | Prisma.SortOrder
   userId?: Prisma.SortOrder
   username?: Prisma.SortOrder
   nickname?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -299,6 +320,7 @@ export type TicketOrderByWithRelationInput = {
   staffId?: Prisma.SortOrderInput | Prisma.SortOrder
   reason?: Prisma.SortOrderInput | Prisma.SortOrder
   proofsSubmittedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  proofCollectionIndex?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   medals?: Prisma.TicketMedalOrderByRelationAggregateInput
@@ -315,6 +337,7 @@ export type TicketWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.TicketWhereInput[]
   NOT?: Prisma.TicketWhereInput | Prisma.TicketWhereInput[]
   channelId?: Prisma.StringFilter<"Ticket"> | string
+  requestGuildId?: Prisma.StringNullableFilter<"Ticket"> | string | null
   userId?: Prisma.StringFilter<"Ticket"> | string
   username?: Prisma.StringFilter<"Ticket"> | string
   nickname?: Prisma.StringNullableFilter<"Ticket"> | string | null
@@ -323,6 +346,7 @@ export type TicketWhereUniqueInput = Prisma.AtLeast<{
   staffId?: Prisma.StringNullableFilter<"Ticket"> | string | null
   reason?: Prisma.StringNullableFilter<"Ticket"> | string | null
   proofsSubmittedAt?: Prisma.DateTimeNullableFilter<"Ticket"> | Date | string | null
+  proofCollectionIndex?: Prisma.IntFilter<"Ticket"> | number
   createdAt?: Prisma.DateTimeFilter<"Ticket"> | Date | string
   closedAt?: Prisma.DateTimeNullableFilter<"Ticket"> | Date | string | null
   medals?: Prisma.TicketMedalListRelationFilter
@@ -336,6 +360,7 @@ export type TicketOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   ticketNumber?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
+  requestGuildId?: Prisma.SortOrderInput | Prisma.SortOrder
   userId?: Prisma.SortOrder
   username?: Prisma.SortOrder
   nickname?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -344,6 +369,7 @@ export type TicketOrderByWithAggregationInput = {
   staffId?: Prisma.SortOrderInput | Prisma.SortOrder
   reason?: Prisma.SortOrderInput | Prisma.SortOrder
   proofsSubmittedAt?: Prisma.SortOrderInput | Prisma.SortOrder
+  proofCollectionIndex?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrderInput | Prisma.SortOrder
   _count?: Prisma.TicketCountOrderByAggregateInput
@@ -360,6 +386,7 @@ export type TicketScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Ticket"> | string
   ticketNumber?: Prisma.IntWithAggregatesFilter<"Ticket"> | number
   channelId?: Prisma.StringWithAggregatesFilter<"Ticket"> | string
+  requestGuildId?: Prisma.StringNullableWithAggregatesFilter<"Ticket"> | string | null
   userId?: Prisma.StringWithAggregatesFilter<"Ticket"> | string
   username?: Prisma.StringWithAggregatesFilter<"Ticket"> | string
   nickname?: Prisma.StringNullableWithAggregatesFilter<"Ticket"> | string | null
@@ -368,6 +395,7 @@ export type TicketScalarWhereWithAggregatesInput = {
   staffId?: Prisma.StringNullableWithAggregatesFilter<"Ticket"> | string | null
   reason?: Prisma.StringNullableWithAggregatesFilter<"Ticket"> | string | null
   proofsSubmittedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Ticket"> | Date | string | null
+  proofCollectionIndex?: Prisma.IntWithAggregatesFilter<"Ticket"> | number
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Ticket"> | Date | string
   closedAt?: Prisma.DateTimeNullableWithAggregatesFilter<"Ticket"> | Date | string | null
 }
@@ -376,6 +404,7 @@ export type TicketCreateInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -384,6 +413,7 @@ export type TicketCreateInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   medals?: Prisma.TicketMedalCreateNestedManyWithoutTicketInput
@@ -397,6 +427,7 @@ export type TicketUncheckedCreateInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -405,6 +436,7 @@ export type TicketUncheckedCreateInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   medals?: Prisma.TicketMedalUncheckedCreateNestedManyWithoutTicketInput
@@ -417,6 +449,7 @@ export type TicketUncheckedCreateInput = {
 export type TicketUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -425,6 +458,7 @@ export type TicketUpdateInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   medals?: Prisma.TicketMedalUpdateManyWithoutTicketNestedInput
@@ -438,6 +472,7 @@ export type TicketUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ticketNumber?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -446,6 +481,7 @@ export type TicketUncheckedUpdateInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   medals?: Prisma.TicketMedalUncheckedUpdateManyWithoutTicketNestedInput
@@ -459,6 +495,7 @@ export type TicketCreateManyInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -467,6 +504,7 @@ export type TicketCreateManyInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
 }
@@ -474,6 +512,7 @@ export type TicketCreateManyInput = {
 export type TicketUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -482,6 +521,7 @@ export type TicketUpdateManyMutationInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -490,6 +530,7 @@ export type TicketUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ticketNumber?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -498,6 +539,7 @@ export type TicketUncheckedUpdateManyInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
 }
@@ -506,6 +548,7 @@ export type TicketCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   ticketNumber?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
+  requestGuildId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   username?: Prisma.SortOrder
   nickname?: Prisma.SortOrder
@@ -514,18 +557,21 @@ export type TicketCountOrderByAggregateInput = {
   staffId?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   proofsSubmittedAt?: Prisma.SortOrder
+  proofCollectionIndex?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrder
 }
 
 export type TicketAvgOrderByAggregateInput = {
   ticketNumber?: Prisma.SortOrder
+  proofCollectionIndex?: Prisma.SortOrder
 }
 
 export type TicketMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   ticketNumber?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
+  requestGuildId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   username?: Prisma.SortOrder
   nickname?: Prisma.SortOrder
@@ -534,6 +580,7 @@ export type TicketMaxOrderByAggregateInput = {
   staffId?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   proofsSubmittedAt?: Prisma.SortOrder
+  proofCollectionIndex?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrder
 }
@@ -542,6 +589,7 @@ export type TicketMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   ticketNumber?: Prisma.SortOrder
   channelId?: Prisma.SortOrder
+  requestGuildId?: Prisma.SortOrder
   userId?: Prisma.SortOrder
   username?: Prisma.SortOrder
   nickname?: Prisma.SortOrder
@@ -550,12 +598,14 @@ export type TicketMinOrderByAggregateInput = {
   staffId?: Prisma.SortOrder
   reason?: Prisma.SortOrder
   proofsSubmittedAt?: Prisma.SortOrder
+  proofCollectionIndex?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   closedAt?: Prisma.SortOrder
 }
 
 export type TicketSumOrderByAggregateInput = {
   ticketNumber?: Prisma.SortOrder
+  proofCollectionIndex?: Prisma.SortOrder
 }
 
 export type TicketScalarRelationFilter = {
@@ -652,6 +702,7 @@ export type TicketCreateWithoutProofsInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -660,6 +711,7 @@ export type TicketCreateWithoutProofsInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   medals?: Prisma.TicketMedalCreateNestedManyWithoutTicketInput
@@ -672,6 +724,7 @@ export type TicketUncheckedCreateWithoutProofsInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -680,6 +733,7 @@ export type TicketUncheckedCreateWithoutProofsInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   medals?: Prisma.TicketMedalUncheckedCreateNestedManyWithoutTicketInput
@@ -707,6 +761,7 @@ export type TicketUpdateToOneWithWhereWithoutProofsInput = {
 export type TicketUpdateWithoutProofsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -715,6 +770,7 @@ export type TicketUpdateWithoutProofsInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   medals?: Prisma.TicketMedalUpdateManyWithoutTicketNestedInput
@@ -727,6 +783,7 @@ export type TicketUncheckedUpdateWithoutProofsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ticketNumber?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -735,6 +792,7 @@ export type TicketUncheckedUpdateWithoutProofsInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   medals?: Prisma.TicketMedalUncheckedUpdateManyWithoutTicketNestedInput
@@ -747,6 +805,7 @@ export type TicketCreateWithoutMedalsInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -755,6 +814,7 @@ export type TicketCreateWithoutMedalsInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   proofs?: Prisma.TicketProofCreateNestedManyWithoutTicketInput
@@ -767,6 +827,7 @@ export type TicketUncheckedCreateWithoutMedalsInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -775,6 +836,7 @@ export type TicketUncheckedCreateWithoutMedalsInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   proofs?: Prisma.TicketProofUncheckedCreateNestedManyWithoutTicketInput
@@ -802,6 +864,7 @@ export type TicketUpdateToOneWithWhereWithoutMedalsInput = {
 export type TicketUpdateWithoutMedalsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -810,6 +873,7 @@ export type TicketUpdateWithoutMedalsInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   proofs?: Prisma.TicketProofUpdateManyWithoutTicketNestedInput
@@ -822,6 +886,7 @@ export type TicketUncheckedUpdateWithoutMedalsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ticketNumber?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -830,6 +895,7 @@ export type TicketUncheckedUpdateWithoutMedalsInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   proofs?: Prisma.TicketProofUncheckedUpdateManyWithoutTicketNestedInput
@@ -842,6 +908,7 @@ export type TicketCreateWithoutForceCloseApprovalsInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -850,6 +917,7 @@ export type TicketCreateWithoutForceCloseApprovalsInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   medals?: Prisma.TicketMedalCreateNestedManyWithoutTicketInput
@@ -862,6 +930,7 @@ export type TicketUncheckedCreateWithoutForceCloseApprovalsInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -870,6 +939,7 @@ export type TicketUncheckedCreateWithoutForceCloseApprovalsInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   medals?: Prisma.TicketMedalUncheckedCreateNestedManyWithoutTicketInput
@@ -897,6 +967,7 @@ export type TicketUpdateToOneWithWhereWithoutForceCloseApprovalsInput = {
 export type TicketUpdateWithoutForceCloseApprovalsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -905,6 +976,7 @@ export type TicketUpdateWithoutForceCloseApprovalsInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   medals?: Prisma.TicketMedalUpdateManyWithoutTicketNestedInput
@@ -917,6 +989,7 @@ export type TicketUncheckedUpdateWithoutForceCloseApprovalsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ticketNumber?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -925,6 +998,7 @@ export type TicketUncheckedUpdateWithoutForceCloseApprovalsInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   medals?: Prisma.TicketMedalUncheckedUpdateManyWithoutTicketNestedInput
@@ -937,6 +1011,7 @@ export type TicketCreateWithoutTranscriptInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -945,6 +1020,7 @@ export type TicketCreateWithoutTranscriptInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   medals?: Prisma.TicketMedalCreateNestedManyWithoutTicketInput
@@ -957,6 +1033,7 @@ export type TicketUncheckedCreateWithoutTranscriptInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -965,6 +1042,7 @@ export type TicketUncheckedCreateWithoutTranscriptInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   medals?: Prisma.TicketMedalUncheckedCreateNestedManyWithoutTicketInput
@@ -992,6 +1070,7 @@ export type TicketUpdateToOneWithWhereWithoutTranscriptInput = {
 export type TicketUpdateWithoutTranscriptInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1000,6 +1079,7 @@ export type TicketUpdateWithoutTranscriptInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   medals?: Prisma.TicketMedalUpdateManyWithoutTicketNestedInput
@@ -1012,6 +1092,7 @@ export type TicketUncheckedUpdateWithoutTranscriptInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ticketNumber?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1020,6 +1101,7 @@ export type TicketUncheckedUpdateWithoutTranscriptInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   medals?: Prisma.TicketMedalUncheckedUpdateManyWithoutTicketNestedInput
@@ -1032,6 +1114,7 @@ export type TicketCreateWithoutLogsInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -1040,6 +1123,7 @@ export type TicketCreateWithoutLogsInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   medals?: Prisma.TicketMedalCreateNestedManyWithoutTicketInput
@@ -1052,6 +1136,7 @@ export type TicketUncheckedCreateWithoutLogsInput = {
   id?: string
   ticketNumber?: number
   channelId: string
+  requestGuildId?: string | null
   userId: string
   username: string
   nickname?: string | null
@@ -1060,6 +1145,7 @@ export type TicketUncheckedCreateWithoutLogsInput = {
   staffId?: string | null
   reason?: string | null
   proofsSubmittedAt?: Date | string | null
+  proofCollectionIndex?: number
   createdAt?: Date | string
   closedAt?: Date | string | null
   medals?: Prisma.TicketMedalUncheckedCreateNestedManyWithoutTicketInput
@@ -1087,6 +1173,7 @@ export type TicketUpdateToOneWithWhereWithoutLogsInput = {
 export type TicketUpdateWithoutLogsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1095,6 +1182,7 @@ export type TicketUpdateWithoutLogsInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   medals?: Prisma.TicketMedalUpdateManyWithoutTicketNestedInput
@@ -1107,6 +1195,7 @@ export type TicketUncheckedUpdateWithoutLogsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   ticketNumber?: Prisma.IntFieldUpdateOperationsInput | number
   channelId?: Prisma.StringFieldUpdateOperationsInput | string
+  requestGuildId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   userId?: Prisma.StringFieldUpdateOperationsInput | string
   username?: Prisma.StringFieldUpdateOperationsInput | string
   nickname?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1115,6 +1204,7 @@ export type TicketUncheckedUpdateWithoutLogsInput = {
   staffId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   reason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   proofsSubmittedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  proofCollectionIndex?: Prisma.IntFieldUpdateOperationsInput | number
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   closedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   medals?: Prisma.TicketMedalUncheckedUpdateManyWithoutTicketNestedInput
@@ -1185,6 +1275,7 @@ export type TicketSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   id?: boolean
   ticketNumber?: boolean
   channelId?: boolean
+  requestGuildId?: boolean
   userId?: boolean
   username?: boolean
   nickname?: boolean
@@ -1193,6 +1284,7 @@ export type TicketSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs =
   staffId?: boolean
   reason?: boolean
   proofsSubmittedAt?: boolean
+  proofCollectionIndex?: boolean
   createdAt?: boolean
   closedAt?: boolean
   medals?: boolean | Prisma.Ticket$medalsArgs<ExtArgs>
@@ -1207,6 +1299,7 @@ export type TicketSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   id?: boolean
   ticketNumber?: boolean
   channelId?: boolean
+  requestGuildId?: boolean
   userId?: boolean
   username?: boolean
   nickname?: boolean
@@ -1215,6 +1308,7 @@ export type TicketSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extens
   staffId?: boolean
   reason?: boolean
   proofsSubmittedAt?: boolean
+  proofCollectionIndex?: boolean
   createdAt?: boolean
   closedAt?: boolean
 }, ExtArgs["result"]["ticket"]>
@@ -1223,6 +1317,7 @@ export type TicketSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   id?: boolean
   ticketNumber?: boolean
   channelId?: boolean
+  requestGuildId?: boolean
   userId?: boolean
   username?: boolean
   nickname?: boolean
@@ -1231,6 +1326,7 @@ export type TicketSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extens
   staffId?: boolean
   reason?: boolean
   proofsSubmittedAt?: boolean
+  proofCollectionIndex?: boolean
   createdAt?: boolean
   closedAt?: boolean
 }, ExtArgs["result"]["ticket"]>
@@ -1239,6 +1335,7 @@ export type TicketSelectScalar = {
   id?: boolean
   ticketNumber?: boolean
   channelId?: boolean
+  requestGuildId?: boolean
   userId?: boolean
   username?: boolean
   nickname?: boolean
@@ -1247,11 +1344,12 @@ export type TicketSelectScalar = {
   staffId?: boolean
   reason?: boolean
   proofsSubmittedAt?: boolean
+  proofCollectionIndex?: boolean
   createdAt?: boolean
   closedAt?: boolean
 }
 
-export type TicketOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ticketNumber" | "channelId" | "userId" | "username" | "nickname" | "robloxUsername" | "status" | "staffId" | "reason" | "proofsSubmittedAt" | "createdAt" | "closedAt", ExtArgs["result"]["ticket"]>
+export type TicketOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "ticketNumber" | "channelId" | "requestGuildId" | "userId" | "username" | "nickname" | "robloxUsername" | "status" | "staffId" | "reason" | "proofsSubmittedAt" | "proofCollectionIndex" | "createdAt" | "closedAt", ExtArgs["result"]["ticket"]>
 export type TicketInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   medals?: boolean | Prisma.Ticket$medalsArgs<ExtArgs>
   proofs?: boolean | Prisma.Ticket$proofsArgs<ExtArgs>
@@ -1276,6 +1374,7 @@ export type $TicketPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     id: string
     ticketNumber: number
     channelId: string
+    requestGuildId: string | null
     userId: string
     username: string
     nickname: string | null
@@ -1284,6 +1383,7 @@ export type $TicketPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs
     staffId: string | null
     reason: string | null
     proofsSubmittedAt: Date | null
+    proofCollectionIndex: number
     createdAt: Date
     closedAt: Date | null
   }, ExtArgs["result"]["ticket"]>
@@ -1717,6 +1817,7 @@ export interface TicketFieldRefs {
   readonly id: Prisma.FieldRef<"Ticket", 'String'>
   readonly ticketNumber: Prisma.FieldRef<"Ticket", 'Int'>
   readonly channelId: Prisma.FieldRef<"Ticket", 'String'>
+  readonly requestGuildId: Prisma.FieldRef<"Ticket", 'String'>
   readonly userId: Prisma.FieldRef<"Ticket", 'String'>
   readonly username: Prisma.FieldRef<"Ticket", 'String'>
   readonly nickname: Prisma.FieldRef<"Ticket", 'String'>
@@ -1725,6 +1826,7 @@ export interface TicketFieldRefs {
   readonly staffId: Prisma.FieldRef<"Ticket", 'String'>
   readonly reason: Prisma.FieldRef<"Ticket", 'String'>
   readonly proofsSubmittedAt: Prisma.FieldRef<"Ticket", 'DateTime'>
+  readonly proofCollectionIndex: Prisma.FieldRef<"Ticket", 'Int'>
   readonly createdAt: Prisma.FieldRef<"Ticket", 'DateTime'>
   readonly closedAt: Prisma.FieldRef<"Ticket", 'DateTime'>
 }
