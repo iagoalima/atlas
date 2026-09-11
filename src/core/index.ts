@@ -123,6 +123,33 @@ client.on("interactionCreate", async (interaction) => {
 
     if (interaction.isStringSelectMenu()) {
       if (await handleRequestSelect(interaction)) return;
+
+      const medalSelect =
+        interaction.customId.startsWith("medal_category_select:") ||
+        interaction.customId.startsWith("medal_delivery_roles:") ||
+        interaction.customId.startsWith("medal_approval_roles:") ||
+        interaction.customId.startsWith("medal_delivery_permission_roles:");
+
+      if (medalSelect) {
+        const userId = interaction.customId.split(":")[1];
+
+        // Medal registration performs several database/Discord requests before
+        // sending the next step. A StringSelectMenu interaction must be
+        // acknowledged within Discord's short response window, so acknowledge
+        // it before dispatching the long-running handler.
+        if (interaction.user.id === userId && !interaction.deferred && !interaction.replied) {
+          await interaction.deferUpdate();
+
+          // The existing medal handlers use interaction.update() for the next
+          // step. Once deferUpdate() is used, update() can no longer be called;
+          // redirect those existing updates to editReply() for this interaction.
+          const interactionWithUpdateRedirect = interaction as typeof interaction & {
+            update: typeof interaction.editReply;
+          };
+          interactionWithUpdateRedirect.update = interaction.editReply.bind(interaction);
+        }
+      }
+
       if (interaction.customId.startsWith("medal_category_select:")) {
         const { handleMedalCategorySelect } = await import("../commands/medal.js");
         await handleMedalCategorySelect(interaction);
