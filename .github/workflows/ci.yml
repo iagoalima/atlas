@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   build:
-    name: Build
+    name: Build and lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -34,3 +34,6 @@ jobs:
         run: npm run build
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/atlas_ci
+
+      - name: Check code quality
+        run: npm run lint
