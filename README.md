@@ -31,6 +31,18 @@ Atlas centraliza o fluxo de solicitações de medalhas em um servidor Discord, o
 
 Os recursos disponíveis dependem da configuração do servidor Discord, das permissões concedidas ao bot e das variáveis de ambiente.
 
+## Prévia visual
+
+<p align="center">
+  <img src="assets/panels/solicitacoes.png" alt="Painel público de solicitações do Atlas" width="31%">
+  <img src="assets/panels/catalogo.png" alt="Apresentação do catálogo de medalhas do Atlas" width="31%">
+  <img src="assets/panels/dashboard.png" alt="Painel interno de análise do Atlas" width="31%">
+</p>
+
+<p align="center">
+  <sub>Painel de solicitações • Catálogo de medalhas • Central interna de análise</sub>
+</p>
+
 ## Tecnologias
 
 | Tecnologia | Uso |
