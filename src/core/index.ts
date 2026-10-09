@@ -143,8 +143,7 @@ client.on("interactionCreate", async (interaction) => {
           // The existing medal handlers use interaction.update() for the next
           // step. Once deferUpdate() is used, update() can no longer be called;
           // redirect those existing updates to editReply() for this interaction.
-          const interactionWithUpdateRedirect = interaction as any;
-          interactionWithUpdateRedirect.update = interaction.editReply.bind(interaction);
+          Reflect.set(interaction, "update", interaction.editReply.bind(interaction));
         }
       }
 
