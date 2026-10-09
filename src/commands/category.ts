@@ -15,7 +15,6 @@ import {
 import { updateMedalCatalog } from "../services/medal-catalog.service.js";
 
 import { prisma } from "../infrastructure/database/prisma.js";
-import { Command } from "../types/command.js";
 
 export const data = new SlashCommandBuilder()
   .setName("categoria")
