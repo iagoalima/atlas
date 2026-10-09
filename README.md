@@ -15,7 +15,7 @@
 
 Atlas centraliza o fluxo de solicitações de medalhas em um servidor Discord, oferecendo uma experiência organizada para solicitantes e equipe responsável. O projeto combina interações do Discord, persistência de dados com PostgreSQL e componentes visuais para facilitar o acompanhamento das solicitações.
 
-> **Estado do projeto:** preparado para revisão e validação de lançamento. Antes de utilizar em produção, configure um ambiente próprio e valide os fluxos, permissões e integrações do Discord.
+> **Estado do projeto:** versão pública **v1.0.0**. O Atlas foi testado pelo mantenedor e aprovado para incorporação à comunidade do Exército Brasileiro (contexto Roblox/Discord). Antes de executar sua própria instância, configure um ambiente separado e valide as permissões, variáveis de ambiente e integrações do Discord.
 
 ## Funcionalidades
 
