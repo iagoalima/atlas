@@ -11,12 +11,14 @@ const __dirname = path.dirname(__filename);
 export const commands = new Collection<string, Command>();
 
 function configureAdminAutocompletes(command: Command): void {
-  const builder = command.data as any;
+  type MutableOption = { name: string; autocomplete?: boolean; options?: MutableOption[] };
+  type MutableCommandBuilder = { options?: MutableOption[] };
+  const builder = command.data as unknown as MutableCommandBuilder;
 
   if (command.data.name === "categoria-admin") {
     for (const subcommand of builder.options ?? []) {
       const categoryOption = (subcommand.options ?? []).find(
-        (option: any) => option.name === "categoria"
+        (option) => option.name === "categoria"
       );
 
       if (categoryOption) {
