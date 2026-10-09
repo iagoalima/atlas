@@ -9,7 +9,7 @@ function cleanText(text: string): string { return text.trim(); }
 function buildDeliveryPermissionRoles(guild: Guild, roles: { roleId: string }[]): string { if (roles.length === 0) return "_Nenhum cargo autorizado para entrega configurado._"; return roles.map(({ roleId }) => { const role = guild.roles.cache.get(roleId); if (!role) return `\`Cargo não encontrado: ${roleId}\``; return `<@&${role.id}>`; }).join(" • "); }
 function hexToNumber(hex: string): number | null { const normalized = hex.replace("#", "").trim(); if (!/^[0-9A-Fa-f]{6}$/.test(normalized)) return null; return parseInt(normalized, 16); }
 
-export async function buildCatalogPresentation(guild: Guild): Promise<ContainerBuilder> {
+export async function buildCatalogPresentation(): Promise<ContainerBuilder> {
   const [categoryCount, medalCount] = await Promise.all([prisma.medalCategory.count({ where: { active: true } }), prisma.medal.count({ where: { active: true, category: { active: true } } })]);
   const container = new ContainerBuilder().setAccentColor(0x1f4f78);
   container.addMediaGalleryComponents((gallery) => gallery.addItems((item) => item.setURL("attachment://catalogo.png")));
@@ -26,7 +26,7 @@ export async function buildCatalogPresentation(guild: Guild): Promise<ContainerB
 async function upsertCatalogPresentation(guild: Guild, channel: TextChannel): Promise<string> {
   const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: guild.id } });
   if (!config) throw new Error("O servidor ainda não possui configuração do Atlas.");
-  const container = await buildCatalogPresentation(guild);
+  const container = await buildCatalogPresentation();
   const payload = { components: [container], files: [{ attachment: BANNER_PATH, name: "catalogo.png" }], flags: MessageFlags.IsComponentsV2 as const };
   if (config.medalCatalogMessageId) {
     const existing = await channel.messages.fetch(config.medalCatalogMessageId).catch(() => null);
@@ -73,7 +73,9 @@ export async function updateMedalCategoryCatalog(guild: Guild, categoryId: strin
   const channel = guild.channels.cache.get(config.medalCatalogChannelId); if (!(channel instanceof TextChannel)) return false;
   const category = await prisma.medalCategory.findUnique({ where: { id: categoryId } }); if (!category) return false;
   const container = await buildMedalCategoryComponents(guild, category.id);
-  if (!container) { if (category.catalogMessageId) { try { const oldMessage = await channel.messages.fetch(category.catalogMessageId); await oldMessage.delete(); } catch {} await prisma.medalCategory.update({ where: { id: category.id }, data: { catalogMessageId: null } }); } return true; }
+  if (!container) { if (category.catalogMessageId) { try { const oldMessage = await channel.messages.fetch(category.catalogMessageId); await oldMessage.delete(); } catch {
+      // The category message may already have been deleted or become inaccessible.
+    } await prisma.medalCategory.update({ where: { id: category.id }, data: { catalogMessageId: null } }); } return true; }
   if (!category.catalogMessageId) { const message = await channel.send({ components: [container], flags: MessageFlags.IsComponentsV2 as const }); await prisma.medalCategory.update({ where: { id: category.id }, data: { catalogMessageId: message.id } }); return true; }
   try { const message = await channel.messages.fetch(category.catalogMessageId); await message.edit({ components: [container], flags: MessageFlags.IsComponentsV2 as const }); return true; }
   catch { try { const message = await channel.send({ components: [container], flags: MessageFlags.IsComponentsV2 as const }); await prisma.medalCategory.update({ where: { id: category.id }, data: { catalogMessageId: message.id } }); return true; } catch (sendError) { console.error("❌ [CATALOG] Erro ao recriar mensagem da categoria:", sendError); return false; } }
@@ -85,7 +87,9 @@ export async function syncMedalCatalog(guild: Guild): Promise<boolean> {
   await upsertCatalogPresentation(guild, channel);
   const categories = await prisma.medalCategory.findMany({ orderBy: [{ position: "asc" }, { name: "asc" }] });
   for (const category of categories) await updateMedalCategoryCatalog(guild, category.id);
-  for (const category of categories) { if (category.active || !category.catalogMessageId) continue; try { const message = await channel.messages.fetch(category.catalogMessageId); await message.delete(); } catch {} await prisma.medalCategory.update({ where: { id: category.id }, data: { catalogMessageId: null } }); }
+  for (const category of categories) { if (category.active || !category.catalogMessageId) continue; try { const message = await channel.messages.fetch(category.catalogMessageId); await message.delete(); } catch {
+      // The category message may already have been deleted or become inaccessible.
+    } await prisma.medalCategory.update({ where: { id: category.id }, data: { catalogMessageId: null } }); }
   console.log("✅ [CATALOG] Catálogo sincronizado com sucesso."); return true;
 }
 
