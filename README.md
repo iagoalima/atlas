@@ -176,6 +176,7 @@ Consulte [Arquitetura](docs/ARCHITECTURE.md) para uma visão de alto nível.
 - [Arquitetura](docs/ARCHITECTURE.md)
 - [Visão do projeto](docs/VISION.md)
 - [Planejamento](docs/ROADMAP.md)
+- [Checklist de validação para lançamento](docs/RELEASE_CHECKLIST.md)
 - [Histórico de alterações](CHANGELOG.md)
 - [Como contribuir](CONTRIBUTING.md)
 - [Política de segurança](SECURITY.md)
