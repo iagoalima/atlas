@@ -54,5 +54,6 @@
   "bugs": {
     "url": "https://github.com/iagoalima/atlas/issues"
   },
-  "homepage": "https://github.com/iagoalima/atlas#readme"
+  "homepage": "https://github.com/iagoalima/atlas#readme",
+  "author": "Iago Antônio Viana Lima"
 }
