@@ -1,0 +1,57 @@
+name: Dependency maintenance
+
+on:
+  push:
+    branches:
+      - "release/public-launch-prep"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  audit-fix:
+    if: github.event_name == 'workflow_dispatch' || !startsWith(github.event.head_commit.message, 'chore(deps): apply compatible audit fixes')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout release preparation branch
+        uses: actions/checkout@v4
+        with:
+          ref: release/public-launch-prep
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply non-breaking dependency fixes
+        run: npm audit fix
+
+      - name: Validate compilation and lint
+        run: |
+          npm run build
+          npm run lint
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/atlas_ci
+
+      - name: Report remaining vulnerabilities
+        if: always()
+        run: npm audit --audit-level=high
+
+      - name: Commit updated lockfile
+        if: success()
+        run: |
+          if git diff --quiet -- package-lock.json; then
+            echo "No compatible lockfile updates were needed."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git commit -m "chore(deps): apply compatible audit fixes"
+          git push origin HEAD:release/public-launch-prep
