@@ -457,10 +457,6 @@ export type IntFieldUpdateOperationsInput = {
   divide?: number
 }
 
-export type BoolFieldUpdateOperationsInput = {
-  set?: boolean
-}
-
 export type MedalCategoryCreateNestedOneWithoutMedalsInput = {
   create?: Prisma.XOR<Prisma.MedalCategoryCreateWithoutMedalsInput, Prisma.MedalCategoryUncheckedCreateWithoutMedalsInput>
   connectOrCreate?: Prisma.MedalCategoryCreateOrConnectWithoutMedalsInput

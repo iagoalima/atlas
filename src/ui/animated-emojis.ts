@@ -1,10 +1,6 @@
 // ==========================================================
 // EMOJIS ANIMADOS DO ATLAS
 // ==========================================================
-//
-// IDs dos emojis personalizados cadastrados no servidor Atlas.
-// Variáveis de ambiente podem sobrescrever os valores.
-// ==========================================================
 
 export const animatedEmojis = {
   medalGranted:
@@ -30,13 +26,7 @@ export const animatedEmojis = {
     "<a:configuration:1541975079141908500>",
 } as const;
 
-// ==========================================================
-// SUBSTITUI EMOJIS ESTÁTICOS PELOS ANIMADOS
-// ==========================================================
-
-export function replaceAnimatedEmojis(
-  content: string
-): string {
+export function replaceAnimatedEmojis(content: string): string {
   return content
     .replaceAll("❌", animatedEmojis.error)
     .replaceAll("⚠️", animatedEmojis.warning)
@@ -50,58 +40,38 @@ export function replaceAnimatedEmojis(
     .replaceAll("🎖️", animatedEmojis.medalGranted);
 }
 
-// ==========================================================
-// CONVERSÃO SEGURA DE COMPONENTES V2
-// ==========================================================
-
-export function replaceAnimatedEmojisInComponents(
-  components: unknown
-): unknown {
-  if (!Array.isArray(components)) {
-    return components;
-  }
-
-  return components.map((component) => {
-    if (!component) {
-      return component;
-    }
-
-    const json =
-      typeof (component as any).toJSON === "function"
-        ? (component as any).toJSON()
-        : component;
-
-    return replaceAnimatedEmojisInComponent(json);
-  });
+function serializeComponent(value: unknown): unknown {
+  if (!value || typeof value !== "object") return value;
+  const toJSON = Reflect.get(value, "toJSON");
+  return typeof toJSON === "function" ? toJSON.call(value) : value;
 }
 
-function replaceAnimatedEmojisInComponent(
-  component: any
-): any {
-  if (!component || typeof component !== "object") {
+function replaceAnimatedEmojisInComponent(component: unknown): unknown {
+  if (!component || typeof component !== "object" || Array.isArray(component)) {
     return component;
   }
 
-  const result: Record<string, any> = {
-    ...component,
+  const result: Record<string, unknown> = {
+    ...(component as Record<string, unknown>),
   };
 
   if (typeof result.content === "string") {
-    result.content = replaceAnimatedEmojis(
-      result.content
-    );
+    result.content = replaceAnimatedEmojis(result.content);
   }
 
   if (Array.isArray(result.components)) {
-    result.components = result.components.map(
-      (child: unknown) =>
-        replaceAnimatedEmojisInComponent(
-          typeof (child as any)?.toJSON === "function"
-            ? (child as any).toJSON()
-            : child
-        )
+    result.components = result.components.map((child: unknown) =>
+      replaceAnimatedEmojisInComponent(serializeComponent(child)),
     );
   }
 
   return result;
+}
+
+export function replaceAnimatedEmojisInComponents(components: unknown): unknown {
+  if (!Array.isArray(components)) return components;
+
+  return components.map((component: unknown) =>
+    replaceAnimatedEmojisInComponent(serializeComponent(component)),
+  );
 }

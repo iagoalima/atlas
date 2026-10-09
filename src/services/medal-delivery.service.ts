@@ -507,7 +507,8 @@ export async function deliverMedal(
     }
 
     throw new Error(
-      "Não foi possível concluir a entrega dos cargos da medalha."
+      "Não foi possível concluir a entrega dos cargos da medalha.",
+      { cause: error }
     );
   }
 
@@ -544,7 +545,8 @@ export async function deliverMedal(
     }
 
     throw new Error(
-      "Não foi possível confirmar a entrega dos cargos."
+      "Não foi possível confirmar a entrega dos cargos.",
+      { cause: error }
     );
   }
 
