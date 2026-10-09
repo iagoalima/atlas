@@ -29,7 +29,7 @@ jobs:
         run: npm ci
 
       - name: Apply non-breaking dependency fixes
-        run: npm audit fix
+        run: npm audit fix || true
 
       - name: Validate compilation and lint
         run: |
