@@ -59,7 +59,11 @@ export async function handleTicketMessage(message: Message): Promise<void> {
       });
 
       setTimeout(async () => {
-        try { await warningMessage.delete(); } catch {}
+        try {
+          await warningMessage.delete();
+        } catch {
+          // The warning is temporary; failure to delete it is non-fatal.
+        }
       }, 8000);
     } catch (error) {
       console.error("❌ [TICKET] Não foi possível processar mensagem sem prova:", error);
