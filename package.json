@@ -1,7 +1,7 @@
 {
   "name": "atlas",
   "version": "1.0.0",
-  "description": "Sistema de Condecorações para Discord",
+  "description": "Bot Discord para gestão de solicitações, análise e entrega de condecorações.",
   "private": true,
   "type": "module",
   "scripts": {
@@ -46,5 +46,13 @@
   "overrides": {
     "deepmerge-ts": "^8.0.2",
     "mysql2": "^3.24.4"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iagoalima/atlas.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iagoalima/atlas/issues"
+  },
+  "homepage": "https://github.com/iagoalima/atlas#readme"
 }
