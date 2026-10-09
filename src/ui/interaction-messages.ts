@@ -140,7 +140,7 @@ function normalizeMessagePayload(
     return payload;
   }
 
-  const options = payload as Record<string, any>;
+  const options = payload as Record<string, unknown>;
 
   const content =
     typeof options.content === "string"
@@ -197,31 +197,39 @@ function normalizeMessagePayload(
       continue;
     }
 
-    const type =
-      typeof component.toJSON === "function"
-        ? component.toJSON().type
-        : component.type;
+    const componentRecord =
+      typeof component === "object"
+        ? (component as Record<string, unknown>)
+        : {};
+    const toJSON = componentRecord.toJSON;
+    const serialized =
+      typeof toJSON === "function" ? toJSON.call(component) : componentRecord;
+    const serializedRecord =
+      typeof serialized === "object" && serialized !== null
+        ? (serialized as Record<string, unknown>)
+        : {};
+    const type = serializedRecord.type;
 
     if (type === 1) {
-      container.addActionRowComponents(component);
+      container.addActionRowComponents(component as never);
       continue;
     }
 
     if (type === 14) {
-      container.addSeparatorComponents(component);
+      container.addSeparatorComponents(component as never);
       continue;
     }
 
     if (type === 10) {
-      const json =
-        typeof component.toJSON === "function"
-          ? component.toJSON()
-          : component;
+      const jsonRecord =
+        typeof serialized === "object" && serialized !== null
+          ? (serialized as Record<string, unknown>)
+          : {};
+      const textContent =
+        typeof jsonRecord.content === "string" ? jsonRecord.content : "";
 
       container.addTextDisplayComponents(
-        new TextDisplayBuilder().setContent(
-          replaceAnimatedEmojis(json.content ?? "")
-        )
+        new TextDisplayBuilder().setContent(replaceAnimatedEmojis(textContent))
       );
       continue;
     }
@@ -242,14 +250,10 @@ function normalizeMessagePayload(
     }
   }
 
-  const {
-    content: _content,
-    embeds: _embeds,
-    stickers: _stickers,
-    poll: _poll,
-    components: _components,
-    ...rest
-  } = options;
+  const excludedKeys = new Set(["content", "embeds", "stickers", "poll", "components"]);
+  const rest = Object.fromEntries(
+    Object.entries(options).filter(([key]) => !excludedKeys.has(key)),
+  );
 
   return {
     ...rest,
@@ -265,11 +269,9 @@ function normalizeMessagePayload(
 export function installInteractionMessageStyle(
   interaction: Interaction
 ): void {
-  const target = interaction as any;
+  const target = interaction as unknown as Record<PropertyKey, unknown>;
 
-  if (target[STYLE_WRAPPED]) {
-    return;
-  }
+  if (target[STYLE_WRAPPED]) return;
 
   Object.defineProperty(target, STYLE_WRAPPED, {
     value: true,
@@ -286,49 +288,38 @@ export function installInteractionMessageStyle(
   ];
 
   for (const method of methods) {
-    if (typeof target[method] !== "function") {
-      continue;
-    }
+    const candidate = target[method];
+    if (typeof candidate !== "function") continue;
 
-    const original = target[method].bind(target);
+    const original = candidate.bind(target) as (
+      ...args: unknown[]
+    ) => unknown;
 
     target[method] = (
       payload: unknown,
       ...rest: unknown[]
-    ) => {
+    ): unknown => {
+      const customId =
+        typeof target.customId === "string" ? target.customId : undefined;
+      const normalizedPayload = normalizeMessagePayload(payload, customId);
+
       if (method === "reply") {
-        const normalizedPayload = normalizeMessagePayload(
-          payload,
-          target.customId
-        );
-
-        if (target.deferred) {
-          return target.editReply(
-            normalizedPayload,
-            ...rest
-          );
+        if (target.deferred === true) {
+          const editReply = target.editReply;
+          if (typeof editReply === "function") {
+            return editReply.call(target, normalizedPayload, ...rest);
+          }
         }
 
-        if (target.replied) {
-          return target.followUp(
-            normalizedPayload,
-            ...rest
-          );
+        if (target.replied === true) {
+          const followUp = target.followUp;
+          if (typeof followUp === "function") {
+            return followUp.call(target, normalizedPayload, ...rest);
+          }
         }
-
-        return original(
-          normalizedPayload,
-          ...rest
-        );
       }
 
-      return original(
-        normalizeMessagePayload(
-          payload,
-          target.customId
-        ),
-        ...rest
-      );
+      return original(normalizedPayload, ...rest);
     };
   }
 }
