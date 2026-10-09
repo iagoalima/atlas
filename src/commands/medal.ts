@@ -91,9 +91,8 @@ export async function execute(
       return;
     }
 
-    let deliveryGuild;
     try {
-      deliveryGuild = await interaction.client.guilds.fetch(config.deliveryGuildId);
+      await interaction.client.guilds.fetch(config.deliveryGuildId);
     } catch (error) {
       console.error("❌ [MEDAL] Não foi possível acessar o servidor de entrega:", error);
       await interaction.reply({
