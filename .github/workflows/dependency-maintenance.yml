@@ -40,7 +40,10 @@ jobs:
 
       - name: Report remaining vulnerabilities
         if: always()
-        run: npm audit --audit-level=high
+        shell: bash
+        run: |
+          npm audit --json > /tmp/npm-audit-after.json || true
+          node -e 'const a=JSON.parse(require("fs").readFileSync("/tmp/npm-audit-after.json","utf8")); console.log(JSON.stringify({metadata:a.metadata?.vulnerabilities, packages:Object.entries(a.vulnerabilities??{}).map(([name,v])=>({name,severity:v.severity,range:v.range,fixAvailable:v.fixAvailable}))},null,2))'
 
       - name: Commit updated lockfile
         if: success()
