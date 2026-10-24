@@ -290,6 +290,7 @@ export async function handleMedalModal(interaction: ModalSubmitInteraction): Pro
 export async function handleMedalCategorySelect(interaction: StringSelectMenuInteraction): Promise<void> {
   if (!interaction.customId.startsWith("medal_category_select:")) return;
   const userId = interaction.customId.split(":")[1];
+
   if (interaction.user.id !== userId) {
     await interaction.reply({ content: "❌ Este menu de seleção pertence a outro administrador.", flags: MessageFlags.Ephemeral });
     return;
@@ -304,79 +305,144 @@ export async function handleMedalCategorySelect(interaction: StringSelectMenuInt
     await interaction.update({ content: "❌ Os dados da medalha expiraram. Inicie o cadastro novamente usando `/medal criar`.", components: [] });
     return;
   }
+
   const categoryId = interaction.values[0];
   if (!categoryId) {
     deleteMedalDraft(interaction.user.id);
     await interaction.update({ content: "❌ Nenhuma categoria foi selecionada.", components: [] });
     return;
   }
-  const category = await prisma.medalCategory.findUnique({ where: { id: categoryId } });
-  if (!category || !category.active) {
-    deleteMedalDraft(interaction.user.id);
-    await interaction.update({ content: "❌ A categoria selecionada não está mais disponível.", components: [] });
+
+  // Open the ID modal immediately: Discord requires the component interaction
+  // to remain unacknowledged until showModal() is called.
+  const modal = new ModalBuilder()
+    .setCustomId(`medal_delivery_role_ids:${interaction.user.id}:${categoryId}`)
+    .setTitle("IDs dos cargos de entrega");
+
+  const roleIdsInput = new TextInputBuilder()
+    .setCustomId("medal_delivery_role_ids")
+    .setLabel("IDs dos cargos (1 a 10)")
+    .setPlaceholder("Cole os IDs separados por vírgula ou em linhas diferentes")
+    .setStyle(TextInputStyle.Paragraph)
+    .setRequired(true)
+    .setMaxLength(1000);
+
+  modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(roleIdsInput));
+  await interaction.showModal(modal);
+}
+
+export async function handleMedalDeliveryRoleIdsModal(interaction: ModalSubmitInteraction): Promise<void> {
+  if (!interaction.customId.startsWith("medal_delivery_role_ids:")) return;
+
+  const [, userId, categoryId] = interaction.customId.split(":");
+  if (interaction.user.id !== userId) {
+    await interaction.reply({ content: "❌ Este formulário pertence a outro administrador.", flags: MessageFlags.Ephemeral });
     return;
   }
-  draft.categoryId = category.id;
-
-  const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: interaction.guild.id } });
-  if (!config?.deliveryGuildId) {
-    deleteMedalDraft(interaction.user.id);
-    await interaction.update({ content: "❌ O servidor de entrega não está configurado.", components: [] });
+  if (!interaction.guild || !categoryId) {
+    await interaction.reply({ content: "❌ Não foi possível identificar o servidor ou a categoria da medalha.", flags: MessageFlags.Ephemeral });
     return;
   }
 
-  let deliveryGuild;
+  const draft = getMedalDraft(interaction.user.id);
+  if (!draft) {
+    await interaction.reply({ content: "❌ Os dados da medalha expiraram. Inicie o cadastro novamente usando `/medal criar`.", flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  await interaction.deferUpdate();
+
+  const rawRoleIds = interaction.fields.getTextInputValue("medal_delivery_role_ids");
+  const roleIds = [...new Set(rawRoleIds.split(/[\\s,;]+/).map((value) => value.trim()).filter(Boolean))];
+
+  if (roleIds.length === 0 || roleIds.length > 10 || roleIds.some((roleId) => !/^\\d{17,20}$/.test(roleId))) {
+    await interaction.editReply({
+      content: "❌ Informe de 1 a 10 IDs válidos de cargos do Discord (17 a 20 dígitos), separados por vírgula ou por linha. Inicie o cadastro novamente com `/medal criar`.",
+      components: [],
+    });
+    deleteMedalDraft(interaction.user.id);
+    return;
+  }
+
   try {
-    deliveryGuild = await interaction.client.guilds.fetch(config.deliveryGuildId);
+    const category = await prisma.medalCategory.findUnique({ where: { id: categoryId } });
+    if (!category || !category.active) {
+      deleteMedalDraft(interaction.user.id);
+      await interaction.editReply({ content: "❌ A categoria selecionada não está mais disponível. Inicie o cadastro novamente.", components: [] });
+      return;
+    }
+
+    const config = await prisma.guildConfig.findUnique({ where: { requestGuildId: interaction.guild.id } });
+    if (!config?.deliveryGuildId) {
+      deleteMedalDraft(interaction.user.id);
+      await interaction.editReply({ content: "❌ O servidor de entrega não está configurado.", components: [] });
+      return;
+    }
+
+    const deliveryGuild = await interaction.client.guilds.fetch(config.deliveryGuildId);
+    const deliveryRoles = await deliveryGuild.roles.fetch();
+    const selectedRoles = roleIds.map((roleId) => deliveryRoles.get(roleId));
+
+    if (selectedRoles.some((role) => !role || role.id === deliveryGuild.id || role.managed)) {
+      deleteMedalDraft(interaction.user.id);
+      await interaction.editReply({
+        content: "❌ Um ou mais IDs não correspondem a cargos válidos e gerenciáveis do servidor de entrega configurado. Confira os IDs e tente novamente com `/medal criar`.",
+        components: [],
+      });
+      return;
+    }
+
+    const requestRoles = await interaction.guild.roles.fetch();
+    const availableApprovalRoles = requestRoles
+      .filter((role) => role.id !== interaction.guild!.id && !role.managed)
+      .sort((a, b) => b.position - a.position);
+
+    if (availableApprovalRoles.size === 0) {
+      deleteMedalDraft(interaction.user.id);
+      await interaction.editReply({ content: "## ❌ Nenhum cargo disponível\n\nNão existem cargos válidos neste servidor que possam ser autorizados a aprovar ou negar esta medalha.", components: [] });
+      return;
+    }
+
+    draft.categoryId = category.id;
+    draft.deliveryRoleIds = roleIds;
+
+    const rolesForSelect = availableApprovalRoles.first(25);
+    const approvalRoleSelect = new StringSelectMenuBuilder()
+      .setCustomId(`medal_approval_roles:${interaction.user.id}`)
+      .setPlaceholder("Selecione quem poderá aprovar ou negar")
+      .setMinValues(1)
+      .setMaxValues(Math.min(rolesForSelect.length, 10));
+
+    for (const role of rolesForSelect) {
+      approvalRoleSelect.addOptions(
+        new StringSelectMenuOptionBuilder()
+          .setLabel(role.name.slice(0, 100))
+          .setValue(role.id)
+          .setDescription("Pode aprovar ou negar esta medalha."),
+      );
+    }
+
+    await interaction.editReply({
+      content: [
+        "### 🛡️ Cargos autorizados para análise",
+        "",
+        `🎖️ **Medalha:** ${draft.name}`,
+        `🗂️ **Categoria:** ${category.name}`,
+        "",
+        `🎁 **Cargos de entrega informados por ID:** ${selectedRoles.filter((role): role is NonNullable<typeof role> => Boolean(role)).map((role) => `${role.name} (${role.id})`).join(", ")}`,
+        "",
+        "Agora selecione os cargos que terão autorização para **aprovar ou negar esta medalha** durante a análise.",
+      ].join("\\n"),
+      components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(approvalRoleSelect)],
+    });
   } catch (error) {
-    console.error("❌ [MEDAL] Erro ao buscar servidor de entrega:", error);
+    console.error("❌ [MEDAL] Erro ao validar IDs dos cargos de entrega:", error);
     deleteMedalDraft(interaction.user.id);
-    await interaction.update({ content: "❌ Não foi possível acessar o servidor de entrega.", components: [] });
-    return;
+    await interaction.editReply({
+      content: "❌ O Atlas não conseguiu validar os IDs informados. Confira se o bot tem acesso ao servidor de entrega e tente novamente com `/medal criar`.",
+      components: [],
+    });
   }
-
-  let roles;
-  try {
-    roles = await deliveryGuild.roles.fetch();
-  } catch (error) {
-    console.error("❌ [MEDAL] Erro ao buscar cargos:", error);
-    deleteMedalDraft(interaction.user.id);
-    await interaction.update({ content: "❌ Não foi possível consultar os cargos do servidor de entrega.", components: [] });
-    return;
-  }
-
-  const availableRoles = roles.filter((role) => role.id !== deliveryGuild.id && !role.managed).sort((a, b) => b.position - a.position);
-  if (availableRoles.size === 0) {
-    deleteMedalDraft(interaction.user.id);
-    await interaction.update({ content: "❌ Nenhum cargo disponível no servidor de entrega.", components: [] });
-    return;
-  }
-
-  const rolesForSelect = availableRoles.first(25);
-  const roleSelect = new StringSelectMenuBuilder()
-    .setCustomId(`medal_delivery_roles:${interaction.user.id}`)
-    .setPlaceholder("Selecione os cargos que serão entregues")
-    .setMinValues(1)
-    .setMaxValues(Math.min(rolesForSelect.length, 10));
-
-  for (const role of rolesForSelect) {
-    roleSelect.addOptions(new StringSelectMenuOptionBuilder().setLabel(role.name.slice(0, 100)).setValue(role.id).setDescription(`Cargo do servidor ${deliveryGuild.name}`.slice(0, 100)));
-  }
-
-  await interaction.update({
-    content: [
-      "### 🎖️ Cargos de entrega",
-      "",
-      `🎖️ **Medalha:** ${draft.name}`,
-      `🗂️ **Categoria:** ${category.name}`,
-      `🏰 **Servidor de entrega:** ${deliveryGuild.name}`,
-      "",
-      "Selecione os cargos que o Atlas deverá **conceder ao usuário** quando esta medalha for efetivamente entregue.",
-      "",
-      "-# Estes cargos são independentes dos cargos autorizados a aprovar ou entregar a medalha.",
-    ].join("\n"),
-    components: [new ActionRowBuilder<StringSelectMenuBuilder>().addComponents(roleSelect)],
-  });
 }
 
 export async function handleMedalDeliveryRoleSelect(interaction: StringSelectMenuInteraction): Promise<void> {
