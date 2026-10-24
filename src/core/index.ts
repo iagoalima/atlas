@@ -183,6 +183,11 @@ client.on("interactionCreate", async (interaction) => {
         await handleMedalModal(interaction);
         return;
       }
+      if (interaction.customId.startsWith("medal_delivery_role_ids:")) {
+        const { handleMedalDeliveryRoleIdsModal } = await import("../commands/medal.js");
+        await handleMedalDeliveryRoleIdsModal(interaction);
+        return;
+      }
       if (interaction.customId === "category_create") {
         const { handleCategoryModal } = await import("../commands/category.js");
         await handleCategoryModal(interaction);
