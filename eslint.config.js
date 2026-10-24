@@ -4,7 +4,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["dist/**", "node_modules/**", "src/generated/prisma/**"],
+    ignores: ["build/**", "dist/**", "node_modules/**", "src/generated/prisma/**"],
   },
   {
     files: ["**/*.{js,mjs,cjs,ts,mts,cts}"],
