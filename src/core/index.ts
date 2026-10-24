@@ -137,7 +137,12 @@ client.on("interactionCreate", async (interaction) => {
         // sending the next step. A StringSelectMenu interaction must be
         // acknowledged within Discord's short response window, so acknowledge
         // it before dispatching the long-running handler.
-        if (interaction.user.id === userId && !interaction.deferred && !interaction.replied) {
+        if (
+          !interaction.customId.startsWith("medal_category_select:") &&
+          interaction.user.id === userId &&
+          !interaction.deferred &&
+          !interaction.replied
+        ) {
           await interaction.deferUpdate();
 
           // The existing medal handlers use interaction.update() for the next
