@@ -353,9 +353,9 @@ export async function handleMedalDeliveryRoleIdsModal(interaction: ModalSubmitIn
   await interaction.deferUpdate();
 
   const rawRoleIds = interaction.fields.getTextInputValue("medal_delivery_role_ids");
-  const roleIds = [...new Set(rawRoleIds.split(/[\\s,;]+/).map((value) => value.trim()).filter(Boolean))];
+  const roleIds = [...new Set(rawRoleIds.split(/[\s,;]+/).map((value) => value.trim()).filter(Boolean))];
 
-  if (roleIds.length === 0 || roleIds.length > 10 || roleIds.some((roleId) => !/^\\d{17,20}$/.test(roleId))) {
+  if (roleIds.length === 0 || roleIds.length > 10 || roleIds.some((roleId) => !/^\d{17,20}$/.test(roleId))) {
     await interaction.editReply({
       content: "❌ Informe de 1 a 10 IDs válidos de cargos do Discord (17 a 20 dígitos), separados por vírgula ou por linha. Inicie o cadastro novamente com `/medal criar`.",
       components: [],
