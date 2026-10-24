@@ -8,7 +8,7 @@
     "dev": "tsx watch src/core/index.ts",
     "register": "tsx src/core/discord/register-commands.ts",
     "build": "prisma generate && tsc",
-    "start": "node dist/core/index.js",
+    "start": "node build/core/index.js",
     "lint": "eslint .",
     "format": "prettier --write ."
   },
